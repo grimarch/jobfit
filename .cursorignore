@@ -1,0 +1,13 @@
+# Generated output (personal data + binary PDFs, regeneratable)
+data/*/output/
+
+# Role input sources (personal data)
+data/*/input/
+
+# Backups
+backups/
+
+# Environment
+.env
+.env.*
+!.env.example
