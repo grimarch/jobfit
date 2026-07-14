@@ -1,0 +1,111 @@
+slug: devops
+label: "DevOps / SRE / Platform"
+
+title_re: 'DevOps|DevSecOps|Platform\s+Engineer|Site\s+Reliability|\bSRE\b|Cloud\s+Engineer|Infrastructure\s+Engineer|Cloud.?Ops|MLOps'
+
+skills:
+  # Containers & Orchestration
+  - ['Docker',             'docker']
+  - ['Kubernetes',         'kubernetes|\bk8s\b']
+  - ['Helm',               '\bhelm\b']
+  - ['OpenShift',          'openshift']
+  - ['Rancher',            'rancher']
+  - ['Podman',             'podman']
+  - ['containerd',         'containerd']
+  # Cloud platforms
+  - ['AWS',                '\baws\b|amazon web services']
+  - ['Azure',              '\bazure\b(?!\s*devops)']
+  - ['GCP',                '\bgcp\b|google cloud']
+  - ['OpenStack',          'openstack']
+  - ['VMware/vSphere',     'vmware|vsphere|vcenter']
+  - ['Proxmox',            'proxmox']
+  - ['KVM',                '\bkvm\b|kernel.based.virtual']
+  # Managed Kubernetes
+  - ['EKS',                '\beks\b|elastic.kubernetes.service']
+  - ['GKE',                '\bgke\b|google.kubernetes.engine']
+  - ['AKS',                '\baks\b|azure.kubernetes.service']
+  # Cloud services
+  - ['CloudFormation',     'cloudformation']
+  - ['IAM',                '\biam\b|identity.access.manag']
+  # IaC
+  - ['Terraform',          'terraform']
+  - ['Ansible',            'ansible']
+  - ['OpenTofu',           'opentofu']
+  - ['Pulumi',             'pulumi']
+  - ['Crossplane',         'crossplane']
+  - ['AWS CDK',            '\bcdk\b|aws.cdk|cloud.development.kit']
+  # CI/CD & GitOps
+  - ['GitLab CI',          'gitlab']
+  - ['GitHub Actions',     'github.?actions']
+  - ['Azure DevOps',       'azure.devops']
+  - ['Jenkins',            'jenkins']
+  - ['Bitbucket',          'bitbucket']
+  - ['ArgoCD',             'argo.?cd|argocd']
+  - ['Argo Workflows',     'argo.?workflow']
+  - ['FluxCD',             'flux.?cd|\bfluxcd\b']
+  - ['CircleCI',           'circleci']
+  - ['TeamCity',           'teamcity']
+  - ['Tekton',             'tekton']
+  # Monitoring & Observability
+  - ['Prometheus',         'prometheus']
+  - ['Grafana',            'grafana']
+  - ['ELK/Elasticsearch',  '\belk\b|elasticsearch']
+  - ['Loki',               '\bloki\b']
+  - ['Tempo',              '\btempo\b']
+  - ['Datadog',            'datadog']
+  - ['Zabbix',             'zabbix']
+  - ['OpenTelemetry',      'opentelemetry|\botel\b']
+  - ['VictoriaMetrics',    'victoria.?metrics']
+  - ['New Relic',          'new.relic']
+  - ['Jaeger',             '\bjaeger\b']
+  # Languages
+  - ['Python',             'python']
+  - ['Bash/Shell',         '\bbash\b|shell.?script']
+  - ['Go/Golang',          '\bgolang\b|\bgo\b.{0,10}(programmier|developer|engineer|lang)']
+  - ['PowerShell',         'powershell']
+  - ['Groovy',             'groovy']
+  - ['C++',                'c\+\+|cpp']
+  # Linux / OS
+  - ['Linux',              '\blinux\b']
+  - ['RHEL/CentOS',        'centos|\brhel\b|red.hat.enterprise']
+  # Networking & Service Mesh
+  - ['Nginx',              'nginx']
+  - ['Istio',              'istio']
+  - ['Cilium',             'cilium']
+  - ['Linkerd',            'linkerd']
+  - ['Consul',             '\bconsul\b']
+  - ['Traefik',            'traefik']
+  # Security
+  - ['HashiCorp Vault',    '\bvault\b']
+  - ['Keycloak',           'keycloak']
+  - ['SAST/DAST',          '\bsast\b|\bdast\b|sonarqube|trivy|\bsnyk\b']
+  - ['OPA/Gatekeeper',     '\bopa\b|open.?policy.?agent|gatekeeper']
+  - ['Falco',              '\bfalco\b']
+  - ['Backstage',          'backstage']
+  - ['KEDA',               '\bkeda\b|kubernetes.event.driven']
+  # Messaging & Streaming
+  - ['Kafka',              '\bkafka\b']
+  - ['RabbitMQ',           'rabbitmq']
+  - ['NATS',               '\bnats\b']
+  # Databases
+  - ['PostgreSQL',         'postgresql|\bpostgres\b']
+  - ['MySQL',              '\bmysql\b']
+  - ['Redis',              '\bredis\b']
+  - ['MongoDB',            'mongodb']
+  - ['ClickHouse',         'clickhouse']
+  # ML/AI Tooling
+  - ['PyTorch',            'pytorch']
+  - ['Triton',             '\btriton\b']
+  - ['NVIDIA GPU Drivers', 'nvidia.?gpu.?driver|nvidia.?driver|nvidia-container-toolkit|nvidia.?container.?runtime']
+  - ['NVIDIA Operators',   'nvidia.?gpu.?operator|nvidia.?network.?operator|nvidia.?operator']
+
+practices:
+  - ['SRE',                  '\bsre\b|site.reliability']
+  - ['Platform Engineering', 'platform.engineer|internal.developer.platform|\bidp\b']
+  - ['GitOps',               'gitops|git.?ops']
+  - ['DevSecOps',            'devsecops']
+  - ['Microservices',        'microservices|microservice']
+  - ['FinOps',               'finops|fin.?ops|cloud.cost']
+  - ['Agile/Scrum',          'agile|scrum']
+  - ['LLM/AI Ops',           '\bllm\b|llmops|genai|generative.ai']
+  - ['Deep Learning',        'deep.?learning']
