@@ -47,3 +47,13 @@ jobs:
           # Required at import time; unit tests mock DB/LLM calls.
           DATABASE_URL: postgresql://jobfit:jobfit@localhost:5432/jobfit
           LLM_API_KEY: test-key
+
+  docker-build:
+    name: Docker build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build image
+        run: docker build -t jobfit:ci .
