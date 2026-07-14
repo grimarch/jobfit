@@ -1,0 +1,60 @@
+{% macro badge(text, style) %}<span style="{{ style }};border-radius:4px;padding:1px 7px;font-size:11px;font-weight:500;white-space:nowrap">{{ text }}</span>{% endmacro %}
+<table id="{{ table_id }}" style="width:100%;border-collapse:collapse;font-size:13px">
+<thead><tr style="border-bottom:2px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">
+{% for col in cols %}
+{% if col.plain %}
+<th style="padding:6px 8px;text-align:center;width:36px;white-space:nowrap;color:var(--muted)">{{ col.label }}</th>
+{% else %}
+<th style="padding:6px 8px;cursor:pointer;user-select:none;white-space:nowrap;transition:color .15s{% if col.center %};text-align:center;width:44px{% endif %}"
+    onclick="sortTierTable('{{ table_id }}',{{ col.col }},{{ 'true' if col.is_num else 'false' }})"
+    onmouseover="this.style.color='var(--text)'"
+    onmouseout="this.style.color='var(--muted)'">{{ col.label }}</th>
+{% endif %}
+{% endfor %}
+</tr></thead>
+<tbody>
+{% for r in rows %}
+<tr>
+<td data-val="{{ r.score }}" style="font-weight:700;color:{{ r.tier_color }};font-variant-numeric:tabular-nums;text-align:center">{{ r.score }}</td>
+{% if r.tier_b %}<td data-val="{{ r.tier_b.sort }}">{{ badge(r.tier_b.text, r.tier_b.style) }}</td>{% endif %}
+<td data-val="{{ r.firma_lower }}" style="font-weight:600;max-width:180px">
+  <a href="{{ r.url }}" target="_blank" style="color:var(--text);text-decoration:none"
+     onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text)'">{{ r.firma }}</a>
+</td>
+<td data-val="{{ r.titel_lower }}" style="color:var(--muted);font-size:12px;max-width:260px">{{ r.titel }}</td>
+<td data-val="{{ r.industry_lower }}" style="font-size:11.5px;max-width:140px">{{ r.industry }}</td>
+<td data-val="{{ r.stage_b.sort }}">{{ badge(r.stage_b.text, r.stage_b.style) }}</td>
+<td data-val="{{ r.mode_b.sort }}">{{ badge(r.mode_b.text, r.mode_b.style) }}</td>
+<td data-val="{{ r.lang_b.sort }}">{{ badge(r.lang_b.text, r.lang_b.style) }}</td>
+<td data-val="{{ r.ort_lower }}" style="font-size:11px;color:var(--muted);white-space:nowrap">{{ r.ort }}</td>
+<td data-val="{{ r.sen_b.sort if r.sen_b else 9 }}">
+  {% if r.sen_b %}{{ badge(r.sen_b.text, r.sen_b.style) }}{% else %}<span style="color:#c8d0e0">—</span>{% endif %}
+</td>
+{% if r.sal %}
+<td data-val="{{ r.sal.val }}" style="font-size:11px;color:#1a7a4e;white-space:nowrap">{{ r.sal.text }}</td>
+{% else %}
+<td data-val="0" style="color:#c8d0e0;font-size:11px">—</td>
+{% endif %}
+<td data-val="{{ r.source_lower }}">{{ badge(r.source_b.text, r.source_b.style) }}</td>
+<td data-val="{{ r.fit_b.pct }}" title="{{ r.fit_b.tooltip }}" style="white-space:nowrap">{{ badge(r.fit_b.text, r.fit_b.style) }}</td>
+<td style="text-align:center;width:36px">
+  <span class="star-btn" data-refnr="{{ r.refnr }}" style="cursor:pointer;font-size:16px;color:#d1d5db;user-select:none" title="Star">☆</span>
+</td>
+<td style="text-align:center;width:36px">
+  <span class="cv-btn" data-refnr="{{ r.refnr }}" style="cursor:pointer;font-size:13px;color:#9ca3af;user-select:none;font-weight:600" title="Generate tailored CV (PDF)">CV</span>
+</td>
+<td style="text-align:center;width:36px">
+  <span class="anschreiben-btn" data-refnr="{{ r.refnr }}" style="cursor:pointer;font-size:13px;color:#9ca3af;user-select:none;font-weight:600" title="Generate Anschreiben (PDF)">AS</span>
+</td>
+<td style="text-align:center;width:36px">
+  <a class="aprv-btn" data-refnr="{{ r.refnr }}" href="/api/anschreiben/{{ r.refnr|urlencode }}/preview?role={{ role_slug }}" target="_blank" style="font-size:13px;color:#9ca3af;text-decoration:none;font-weight:600" title="Preview generated Anschreiben (opens after generation)">APRV</a>
+</td>
+<td style="text-align:center;width:36px">
+  <a class="prv-btn" data-refnr="{{ r.refnr }}" href="/api/cv/{{ r.refnr|urlencode }}/preview?role={{ role_slug }}" target="_blank" style="font-size:13px;color:#9ca3af;text-decoration:none;font-weight:600" title="Preview generated CV (opens after generation)">PRV</a>
+</td>
+<td style="text-align:center;width:36px">
+  <input type="checkbox" class="read-cb" data-refnr="{{ r.refnr }}" style="cursor:pointer;width:14px;height:14px">
+</td>
+</tr>
+{% endfor %}
+</tbody></table>

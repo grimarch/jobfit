@@ -1,0 +1,41 @@
+<div data-view="{{ key }}" style="display:none">
+<details class="card collapsible" style="margin-bottom:14px">
+  <summary class="collapsible-summary">
+    <div>
+      <div class="card-title">Tier Overview</div>
+      <div class="card-desc" style="margin-bottom:0">{{ tier_desc }}</div>
+    </div>
+    <span class="collapsible-icon">▾</span>
+  </summary>
+  <div class="collapsible-body" style="font-size:13px;line-height:1.7">
+    <strong>Tier logic:</strong> {{ tier_criteria }}
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <strong>Score formula</strong> (same for all tiers):<br>
+      <span style="font-size:12px;color:var(--muted)">{{ score_formula }}</span><br>
+      <span style="display:block;margin-top:4px">{{ tier_scoring }}</span>
+    </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <strong>Language badge legend</strong> — detected from job description text:<br>
+      <span style="font-family:monospace">EN ✓</span> — English description or explicit "English ok / no German required"&nbsp;&nbsp;
+      <span style="font-family:monospace">DE C2</span> — "muttersprachlich", "verhandlungssicher"&nbsp;&nbsp;
+      <span style="font-family:monospace">DE C1</span> — "fließend", "sehr gut"&nbsp;&nbsp;
+      <span style="font-family:monospace">DE B2</span> — "gut"&nbsp;&nbsp;
+      <span style="font-family:monospace">DE B1</span> — "Grundkenntnisse"&nbsp;&nbsp;
+      <span style="font-family:monospace">DE ?</span> — language not specified or unclear
+    </div>
+  </div>
+</details>
+<div class="card" style="margin-bottom:14px;padding:16px 20px">
+  <div class="card-title" style="margin-bottom:10px">Stage &amp; work mode distribution</div>
+  {% if chart_block %}<div style="margin-bottom:14px">{{ chart_block }}</div>{% endif %}
+</div>
+<div class="card">
+  <div class="card-hdr">
+    <div>
+      <div class="card-title">{{ label }} vacancies</div>
+      <div class="card-desc" style="margin-bottom:0">{{ n }} positions · sorted by score</div>
+    </div>
+  </div>
+  <div style="overflow-x:auto">{{ table_html }}</div>
+</div>
+</div>
