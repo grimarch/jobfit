@@ -1,0 +1,19 @@
+{% if not what_if %}<p class="muted">No simulation data</p>{% else %}
+{% for wi in what_if %}
+<details class="wi-item">
+<summary class="wi-summary">
+  <span class="wi-name">{{ wi.name }}</span>
+  <span class="wi-delta">+{{ wi.delta }} jobs</span>
+  <span class="wi-count">{{ coverage_count }} → {{ wi.new_count }}</span>
+</summary>
+<div class="wi-body"><ul style="margin:0;padding-left:16px">
+{% for j in wi.jobs %}
+<li style="margin:3px 0">
+  <a href="{{ j.url }}" target="_blank" style="color:#222;text-decoration:none">{{ j.titel }} ↗</a>
+  <span class="muted">— {{ j.firma }} · {{ j.stage }} · {{ "%.2f"|format(j.sim) }}</span>
+</li>
+{% endfor %}
+</ul></div>
+</details>
+{% endfor %}
+{% endif %}

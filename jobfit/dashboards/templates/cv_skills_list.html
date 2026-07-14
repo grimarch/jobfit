@@ -1,0 +1,11 @@
+<p style="font-size:12px;color:var(--muted);margin-bottom:14px">
+  <span style="color:var(--good);font-weight:600">{{ have_count }} skills</span> found
+  in CV · <span style="color:var(--muted)">{{ total - have_count }} missing</span>
+</p>
+{% for item in items %}
+<div class="sk-row">
+  <span class="sk-dot {{ 'have' if item.have else 'miss' }}"></span>
+  <span class="sk-name">{{ item.name }}</span>
+  <span class="sk-badge {{ 'have' if item.have else 'miss' }}">{{ 'yes' if item.have else 'no' }}</span>
+</div>
+{% endfor %}

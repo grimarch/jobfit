@@ -1,0 +1,14 @@
+{% macro req_row(item) %}
+<div class="mreq-row{% if item.highlight %}  hl{% endif %}">
+  <span>{{ item.label }}</span>
+  <span class="mreq-pct">{{ item.pct }}%</span>
+  <div class="mreq-bar"><div class="mreq-fill" style="width:{{ item.pct }}%"></div></div>
+</div>
+{% endmacro %}
+{% if profile_parts %}<p class="muted" style="margin:0 0 10px">Your profile: {% for p in profile_parts %}<b>{{ p }}</b>{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px">
+{% if exp_items %}<div><div class="mreq-sect-title">Experience</div>{% for item in exp_items %}{{ req_row(item) }}{% endfor %}</div>{% endif %}
+{% if sen_items %}<div><div class="mreq-sect-title">Level</div>{% for item in sen_items %}{{ req_row(item) }}{% endfor %}</div>{% endif %}
+{% if edu_items %}<div><div class="mreq-sect-title">Education</div>{% for item in edu_items %}{{ req_row(item) }}{% endfor %}</div>{% endif %}
+{% if cert_items %}<div><div class="mreq-sect-title">Certificates</div>{% for item in cert_items %}{{ req_row(item) }}{% endfor %}</div>{% endif %}
+</div>

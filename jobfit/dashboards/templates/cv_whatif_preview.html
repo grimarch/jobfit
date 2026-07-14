@@ -1,0 +1,10 @@
+{% if not what_if %}<p class="muted">No data</p>{% else %}
+{% for wi in what_if[:top_n] %}
+<div class="wi-prev-row">
+  <span class="wi-name">{{ wi.name }}</span>
+  <span class="wi-delta">+{{ wi.delta }}</span>
+  <span class="wi-count">{{ coverage_count }} → {{ wi.new_count }}</span>
+</div>
+{% endfor %}
+{% if what_if|length > top_n %}<p class="muted" style="margin-top:8px;font-size:11px">…{{ what_if|length - top_n }} more skills</p>{% endif %}
+{% endif %}

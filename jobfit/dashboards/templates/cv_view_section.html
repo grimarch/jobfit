@@ -1,0 +1,49 @@
+<div data-view="{{ vid }}"{% if vid != default_view %} style="display:none"{% endif %}>
+<div class="two-col">
+
+<div class="card" style="margin-bottom:0">
+<div class="card-hdr">
+  <div>
+    <div class="card-title">Gaps &amp; Strengths</div>
+    <div class="card-desc">Frequency ≥{{ min_market_pct }}% · {{ label }} · n={{ n }}</div>
+  </div>
+  <div class="seg-ctrl" id="seg-{{ vid }}">
+    <button class="seg-btn active" data-mode="market">Market</button>
+    <button class="seg-btn" data-mode="top10">Top {{ top_jobs }} jobs</button>
+  </div>
+</div>
+<div class="market-chart" id="mc-{{ vid }}">
+{{ chart_html }}
+</div>
+<div class="top10-chart" id="tc-{{ vid }}" style="display:none">
+<p class="muted" style="margin-bottom:10px">Skills from top {{ top_jobs }} jobs missing from CV — sorted by frequency</p>
+{{ top10_chart_html }}
+</div>
+</div>
+
+<div>
+<div class="card" style="margin-bottom:12px">
+  <div class="card-title">Market requirements</div>
+  <div class="card-desc">{{ label }} · your profile highlighted</div>
+  {{ mreq }}
+</div>
+<div class="card">
+  <div class="card-hdr" style="margin-bottom:12px">
+    <div>
+      <div class="card-title">Simulation: +1 skill</div>
+      <div class="card-desc">Jobs unlocked by adding a skill</div>
+    </div>
+    <button class="btn-link" onclick="openDrawer('drawer-whatif')">All →</button>
+  </div>
+  {{ what_if_preview_html }}
+</div>
+</div>
+
+</div>
+{% if irrelevant %}
+<div class="irr-card">
+  <div class="card-title" style="margin-bottom:8px">In CV, market doesn't need (&lt;{{ min_market_pct }}%)</div>
+  <div class="irr-chips">{% for s in irrelevant %}<span class="irr-chip">{{ s }}</span>{% endfor %}</div>
+</div>
+{% endif %}
+</div>

@@ -1,0 +1,22 @@
+<div class="page-hdr">
+<h1 class="page-title">CV Analysis</h1>
+<div class="tabs">
+{% for v in all_views %}<button class="tab{% if v.id == default_view %}  active{% endif %}" data-view="{{ v.id }}" onclick="setView('{{ v.id }}')">{{ v.label }} <span class="tab-n">(n={{ v.n }})</span></button>
+{% endfor %}</div>
+</div>
+
+{{ kpi_row_html }}
+
+{{ view_sections_html }}
+
+<div class="card">
+<div class="card-title">Co-occurring requirements</div>
+<p class="card-desc">P(column | row) — if a job requires the row skill, what is the probability it also requires the column skill</p>
+{{ cooc_html }}
+</div>
+
+<div class="card">
+<div class="card-title">Top {{ top_jobs_n }} similar jobs</div>
+<p class="card-desc">Cosine similarity × stage weight (startup ×1.3, mittelstand ×1.2, enterprise ×0.8) × dimension multiplier. Lead/Head positions excluded.</p>
+<div class="job-cards">{{ job_cards_html }}</div>
+</div>

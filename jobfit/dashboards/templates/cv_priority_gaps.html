@@ -1,0 +1,12 @@
+{% if not items %}<p class="muted">No data</p>{% else %}
+<div class="pg-row" style="font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding-bottom:8px">
+  <span>Skill</span><span style="text-align:right">of {{ top_n }}</span><span>Frequency</span>
+</div>
+{% for item in items %}
+<div class="pg-row">
+  <span class="pg-name">{{ item.name }}</span>
+  <span class="pg-count">{{ item.count }}/{{ top_n }}</span>
+  <div class="pg-bar-track"><div class="pg-bar-fill" style="width:{{ (item.count / top_n * 100)|round|int }}%"></div></div>
+</div>
+{% endfor %}
+{% endif %}

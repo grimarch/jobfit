@@ -1,0 +1,38 @@
+<div class="kpi-row">
+
+<div class="kpi clickable" onclick="openDrawer('drawer-skills')">
+<span class="kpi-arrow">→</span>
+<div class="kpi-val">{{ cv_skill_count }} <span class="sub">/ {{ n_skills }}</span></div>
+<div class="kpi-lbl">Skills in CV</div>
+<div class="mini-track"><div class="mini-fill" style="width:{{ skill_pct }}%"></div></div>
+</div>
+
+<div class="kpi accent clickable" onclick="openDrawer('drawer-coverage')">
+<span class="kpi-arrow">→</span>
+<div class="kpi-val">{{ coverage_pct }}<span class="sub">%</span></div>
+<div class="kpi-lbl">Market coverage</div>
+<div class="kpi-hint">{{ coverage_count }} / {{ n_jobs }} jobs · sim ≥ {{ coverage_threshold }}</div>
+</div>
+
+<div class="kpi">
+<div class="kpi-val">{{ n_jobs }}</div>
+<div class="kpi-lbl">Product jobs</div>
+<div class="kpi-hint">all product companies</div>
+</div>
+
+<div class="kpi bad clickable" onclick="openDrawer('drawer-gaps')">
+<span class="kpi-arrow">→</span>
+<div class="card-title" style="margin-bottom:8px">Priority gaps</div>
+<div class="kpi-preview">
+{% for name, count in top3_gaps %}
+<div class="kpi-preview-row">
+  <span class="kpi-preview-name">{{ name }}</span>
+  <div class="kpi-preview-bar"><div class="kpi-preview-fill" style="width:{{ (count / top_jobs_n * 100)|round|int }}%"></div></div>
+  <span class="kpi-preview-n">{{ count }}/{{ top_jobs_n }}</span>
+</div>
+{% endfor %}
+</div>
+<button class="btn-link" style="margin-top:6px">All →</button>
+</div>
+
+</div>
