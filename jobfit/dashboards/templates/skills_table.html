@@ -1,0 +1,21 @@
+<details class="stats-details">
+<summary>Skills table ▾</summary>
+<div style="overflow-x:auto;margin-top:8px">
+<table class="stats-table">
+<thead><tr>
+  <th>Skill</th>
+  <th>All ({{ total_all }})</th>
+  {% for label, n in stage_headers %}<th>{{ label }} ({{ n }})</th>{% endfor %}
+</tr></thead>
+<tbody>
+{% for row in rows %}
+<tr>
+  <td>{{ row.name }}</td>
+  <td>{{ row.n_all }} <span class="muted">{{ row.pct_all }}%</span></td>
+  {% for cell in row.cells %}<td>{{ cell.n }} <span class="muted">{{ cell.pct }}%</span></td>{% endfor %}
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</details>

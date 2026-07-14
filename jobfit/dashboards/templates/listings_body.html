@@ -1,0 +1,11 @@
+<div class="page-hdr">
+<h1 class="page-title">Listings Dashboard</h1>
+<p style="font-size:12px;color:var(--muted);margin-top:4px">Jobs: <strong>{{ n_total }}</strong> &nbsp;·&nbsp; Skills in CV: <strong>{{ cv_skill_count }} / {{ n_skills }}</strong></p>
+</div>
+<div class="card" style="padding-top:12px">
+<div class="tabs" style="margin-bottom:16px">
+{% for tab in tabs %}<button class="tab{% if tab.is_active %} active{% endif %}" data-view="{{ tab.pid }}" onclick="setView('{{ tab.pid }}')">{{ tab.label }} <span class="tab-n">({{ tab.n }})</span></button>
+  {% endfor %}
+</div>
+{{ sections_html }}
+</div>

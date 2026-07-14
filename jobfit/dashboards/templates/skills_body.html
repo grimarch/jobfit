@@ -1,0 +1,32 @@
+<div class="page-hdr">
+<div>
+<h1 class="page-title">Skills Dashboard</h1>
+<p style="font-size:12px;color:var(--muted);margin-top:4px">
+Total: <strong>{{ totals.all }}</strong> &nbsp;·&nbsp;
+Startup: <strong>{{ totals.startup }}</strong> &nbsp;·&nbsp;
+Mittelstand: <strong>{{ totals.mittelstand }}</strong> &nbsp;·&nbsp;
+Enterprise: <strong>{{ totals.enterprise }}</strong>
+</p>
+</div>
+</div>
+<div class="card">
+<div class="card-title">Top {{ top_n }} skills — all product companies</div>
+{{ charts.top_skills }}
+{{ tables.get('skills', '') }}
+</div>
+<div class="card">
+<div class="card-title">Comparison by stage</div>
+<p class="card-desc">% of jobs with this skill in each group</p>
+{{ charts.heatmap }}
+</div>
+<div class="card">
+<div class="card-title">Methodologies and practices</div>
+<p class="card-desc">% of jobs mentioning the practice — not hard skills, not counted in Fit</p>
+{{ charts.get('practices', '') }}
+{{ tables.get('practices', '') }}
+</div>
+<div class="card">
+<div class="card-title">Geography</div>
+{{ charts.geography }}
+{{ tables.get('geo', '') }}
+</div>
