@@ -1,0 +1,20 @@
+<details class="stats-details">
+<summary>Regions table ▾</summary>
+<div style="overflow-x:auto;margin-top:8px">
+<table class="stats-table">
+<thead><tr>
+  <th>Region</th><th>Total</th>
+  {% for label in stage_labels %}<th>{{ label }}</th>{% endfor %}
+</tr></thead>
+<tbody>
+{% for row in rows %}
+<tr>
+  <td>{{ row.region }}</td>
+  <td>{{ row.total }}</td>
+  {% for n in row.counts %}<td>{{ n }}</td>{% endfor %}
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</details>

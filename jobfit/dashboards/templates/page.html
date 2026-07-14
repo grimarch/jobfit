@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>{{ title }}</title>
+<script src="plotly.min.js"></script>
+<style>{{ css }}</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sb-brand"><div class="sb-icon">J</div><span class="sb-name">JobFit</span></div>
+  {% if role_name %}<span class="sb-role">{{ role_name }}</span>{% endif %}
+  <span class="sb-section">Dashboards</span>
+  {% for page_id, icon, label, href in nav_items %}<a class="nav-item{% if page_id == active_page %} active{% endif %}" href="{{ href }}"><span class="nav-icon">{{ icon }}</span> {{ label }}</a>
+  {% endfor %}
+</div>
+<div class="main">
+{{ body }}
+</div>
+<div class="overlay" id="_overlay" onclick="closeDrawer()"></div>
+{{ drawers }}<script>{{ shared_js }}
+{{ extra_js }}</script>
+</body>
+</html>
