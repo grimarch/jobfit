@@ -1,0 +1,57 @@
+services:
+  everjobs:
+    image: ghcr.io/ever-jobs/ever-jobs:latest
+    ports:
+      - "3001:3001"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PORT: 3001
+      NODE_ENV: production
+      ENABLE_CACHE: "true"
+      CACHE_EXPIRY: "86400"
+      LOG_LEVEL: warn
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 3001"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-jobfit}
+      POSTGRES_USER: ${POSTGRES_USER:-jobfit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jobfit}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    ports:
+      - "8888:8888"
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Override .env values that must differ inside Compose networking
+      DATABASE_URL: postgresql://${POSTGRES_USER:-jobfit}:${POSTGRES_PASSWORD:-jobfit}@db:5432/${POSTGRES_DB:-jobfit}
+      EVERJOBS_URL: http://everjobs:3001
+      APP_HOST_PORT: "8888"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+
+volumes:
+  postgres_data:

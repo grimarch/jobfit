@@ -1,0 +1,14 @@
+data/
+backups/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.git/
+.pytest_cache/
+.coverage
+htmlcov/
+logs/
+dashboards/
+*.db
