@@ -1,0 +1,35 @@
+---
+experience_years: 5
+seniority: mid
+education: bachelor
+german_level: B2
+certifications: []
+work_mode_preference: hybrid
+contact_name: Max Mustermann
+contact_city: Berlin
+contact_email: you@example.com
+contact_phone: +49 123 4567890
+contact_linkedin: linkedin.com/in/your-slug
+contact_github: github.com/your-username
+---
+MAX MUSTERMANN
+DEVOPS ENGINEER
+Berlin | you@example.com | github.com/your-username | linkedin.com/in/your-slug
+
+   SUMMARY
+DevOps Engineer with experience in CI/CD, container platforms, and infrastructure as code.
+
+   SKILLS & TECHNOLOGIES
+   Languages: Python, Bash
+   DevOps & Tools: Docker, Kubernetes, Terraform, Ansible, GitHub Actions, GitLab CI
+
+   EXPERIENCE
+   DevOps Engineer | Example GmbH | Berlin | 2022 – Present
+   - Built and maintained Kubernetes clusters and GitOps workflows
+   - Automated deployments with Terraform and CI/CD pipelines
+
+   EDUCATION
+   B.Sc. Computer Science | Example University | 2018 – 2022
+
+   LANGUAGES
+   German — B2 | English — fluent

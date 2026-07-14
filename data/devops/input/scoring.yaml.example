@@ -1,0 +1,122 @@
+# Personal scoring/tiering preferences for the Target Companies and CV Gap
+# Analysis dashboards. Copy to scoring.yaml and tune to your own priorities —
+# scoring.yaml is gitignored (data/*/input/), this .example is the only part
+# that's tracked.
+
+# Industries that push a job toward the "Dreamjob" tier. Replace with your own —
+# but they MUST match, character-for-character, one of the canonical industry
+# names the classifier assigns to jobs: see CANONICAL in jobfit/industry.py for
+# the full list (e.g. "FinTech", "eCommerce / Retail", "Gaming / Media", "AI / ML",
+# "SaaS / Cloud", "Cybersecurity", "HealthTech / MedTech", ...). A typo or a name
+# that isn't in that list won't error — it will just silently never match any
+# job, so Dreamjob quietly stays empty (0 jobs) with no warning.
+preferred_industries:
+  - "Fintech"
+  - "E-commerce"
+
+weights:
+  # Points for company_type (any type not listed here scores 0).
+  company_type:
+    product: 3
+    consulting: -3
+    public_sector: -3
+  preferred_industry_bonus: 2
+  # Points for company_stage (any stage not listed here, e.g. "enterprise", scores 0).
+  company_stage_bonus:
+    startup: 2
+    mittelstand: 1
+  # Points for work_mode (any mode not listed here scores 0).
+  work_mode:
+    remote: 3
+    hybrid: 1
+    onsite: -1
+  english_ok_bonus: 2
+  on_call_penalty: -1
+  no_on_call_bonus: 1
+  # Points for required German level. "unspecified" = no level given in the posting.
+  german_level:
+    unspecified: 1
+    C2: -1
+  salary_bonus:
+    threshold: 90000
+    points: 2
+
+tiers:
+  dreamjob:
+    min_score: 9
+    stages: ["startup"]      # empty list = no stage restriction; e.g. ["startup", "mittelstand"]
+    require_preferred_industry: true
+  easywin:
+    min_skill_coverage: 0.80
+    fallback_min_score: 3
+
+# Used by the CV Gap Analysis dashboard (jobfit/dashboards/cv.py) to rank
+# job-similarity results, not by the Target Companies tiering above.
+cv_match:
+  stage_weights:
+    startup: 1.3
+    mittelstand: 1.2
+    enterprise: 0.8
+  coverage_threshold: 0.4
+  # Job titles matching this regex are excluded from ranking (e.g. management roles).
+  exclude_title_regex: '\b(lead|head|principal)\b'
+
+# Text shown on the Target Companies dashboard tier cards. Each tier card has
+# three text slots:
+#   summary      -> "Tier Overview" one-liner (collapsed state)
+#   criteria     -> "Tier logic:" line (expanded state)
+#   scoring_note -> unlabeled line right after "Score formula" (expanded state)
+#
+# Field support differs per tier — whichever piece of text would restate a
+# numeric threshold or on/off flag is generated in code instead of hand-written,
+# so it can never drift out of sync when you tune a weight below:
+#   - dreamjob: has NO `summary` key — only `tagline` (a short personal-voice
+#     phrase, e.g. "Top priority, full preparation."). The rest of the summary
+#     sentence ("Startup in a preferred industry") is generated from
+#     dreamjob_stages/require_preferred_industry, so it can't claim "startup"
+#     after `stages` no longer includes it. `criteria`/`scoring_note` are fully
+#     generated from tiers.dreamjob.* + preferred_industries — don't add them
+#     here, they're ignored.
+#   - easywin: only `summary` is read from here (its wording doesn't name an
+#     exact number, so there's nothing to drift). `criteria`/`scoring_note`
+#     are generated from tiers.easywin.* — don't add them here, they're ignored.
+#   - starred, cvbuilder, skip: `summary`, `criteria`, and `scoring_note` are
+#     ALL taken from here verbatim. These three tiers have no single numeric
+#     threshold to derive text from (starred = manual ★, cvbuilder = brand-DB
+#     lookup, skip = catch-all "everything else") — so there is nothing to
+#     compute, and you're expected to just write the text yourself. Edit
+#     freely; nothing here will fall out of sync since nothing is computed
+#     from it.
+tier_text:
+  starred:
+    summary: "Your shortlist — starred jobs from all tiers."
+    criteria: >-
+      Contains jobs you starred in any tier ·
+      each row shows its original tier ·
+      star or unstar via ★ in any tier view
+    scoring_note: >-
+      No placement rule — star any job via ★. Score reflects conditions —
+      use it to compare and prioritise your shortlist.
+  dreamjob:
+    tagline: "Top priority, full preparation."
+  cvbuilder:
+    summary: "Recognised IT brand — a strong line on the CV, even if conditions aren't perfect."
+    criteria: >-
+      Recognised <strong>IT brand</strong> ·
+      known to developers, recruiters, or the industry community ·
+      worth the extra effort regardless of other trade-offs
+    scoring_note: >-
+      Placement: recognised IT brand — any known brand lands here regardless
+      of score. Score reflects job conditions — use it to prioritise which
+      brands to target first.
+  easywin:
+    summary: "Strong skill match — not a dreamjob, not a brand. High offer probability."
+  skip:
+    summary: "Weak match on key factors. Apply only to fill the pipeline."
+    criteria: >-
+      Consulting · public sector · poor skill match ·
+      onsite · heavy language requirement · <strong>everything else</strong>
+    scoring_note: >-
+      Placement: catch-all — everything not qualifying for other tiers.
+      Score reflects conditions — use it to find the best options if
+      filling the pipeline.
