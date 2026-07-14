@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="{{ letter.language }}">
+<head>
+<meta charset="UTF-8">
+<title>{{ letter.candidate_name }} – Anschreiben</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Arial, "Helvetica Neue", sans-serif;
+    font-size: 11pt;
+    line-height: 1.4;
+    color: #1c1917;
+    background: #fff;
+    /* DIN 5008: left 2.5cm, right 2cm — approximated for screen */
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 4.5cm 2cm 2.5cm 2.5cm;
+  }
+
+  /* ── Absender (sender block) ────────────────────────────────────── */
+  .ab-absender {
+    font-size: 10pt;
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .ab-absender-name {
+    font-weight: 700;
+    font-size: 11pt;
+  }
+  .ab-absender-contact {
+    color: #44403c;
+    font-size: 9.5pt;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 16px;
+    margin-top: 2px;
+  }
+
+  /* ── Trennlinie ────────────────────────────────────────────────── */
+  .ab-divider {
+    border: none;
+    border-top: 1.5px solid #1c1917;
+    margin: 8px 0 20px 0;
+  }
+
+  /* ── Empfänger (recipient block) ───────────────────────────────── */
+  .ab-empfaenger {
+    font-size: 10.5pt;
+    line-height: 1.55;
+    margin-bottom: 24px;
+    min-height: 40px;
+  }
+  .ab-empfaenger-firma {
+    font-weight: 700;
+  }
+
+  /* ── Datum ──────────────────────────────────────────────────────── */
+  .ab-datum-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 24px;
+    font-size: 10.5pt;
+    color: #1c1917;
+  }
+
+  /* ── Betreff ────────────────────────────────────────────────────── */
+  .ab-betreff {
+    font-weight: 700;
+    font-size: 11.5pt;
+    color: #b45309;
+    margin-bottom: 20px;
+  }
+
+  /* ── Anrede ─────────────────────────────────────────────────────── */
+  .ab-anrede {
+    font-size: 11pt;
+    margin-bottom: 16px;
+  }
+
+  /* ── Body paragraphs ────────────────────────────────────────────── */
+  .ab-body {
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+  .ab-para {
+    margin-bottom: 14px;
+    orphans: 3;
+    widows: 3;
+  }
+  .ab-para:last-child {
+    margin-bottom: 0;
+  }
+
+  /* ── Grußformel + Unterschrift ──────────────────────────────────── */
+  .ab-gruss {
+    margin-top: 20px;
+    font-size: 11pt;
+  }
+  .ab-gruss-text {
+    margin-bottom: 0;
+  }
+  .ab-signature-space {
+    /* 3 blank lines for handwritten signature */
+    height: 2.8em;
+  }
+  .ab-name {
+    font-weight: 600;
+    font-size: 11pt;
+  }
+
+  /* ── Tailoring notes (screen only) ─────────────────────────────── */
+  .ab-notes {
+    margin-top: 28px;
+    padding: 10px 14px;
+    background: #fafaf9;
+    border-left: 3px solid #d6d3d1;
+    font-size: 9pt;
+    color: #78716c;
+  }
+  .ab-notes-title { font-weight: 700; margin-bottom: 5px; color: #57534e; }
+  .ab-notes ul { padding-left: 14px; }
+  .ab-notes li { margin-bottom: 2px; }
+
+  /* ── Preview toolbar (screen only) ─────────────────────────────── */
+  .ab-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 18px;
+    padding: 8px 12px;
+    background: #fafaf9;
+    border: 1px solid #e7e5e4;
+    border-radius: 4px;
+    font-size: 9pt;
+    color: #78716c;
+  }
+  .ab-toolbar-label { flex: 1; }
+  .ab-toolbar button {
+    padding: 4px 12px;
+    font-size: 9pt;
+    font-weight: 600;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    background: #1c1917;
+    color: #fff;
+  }
+  .ab-toolbar button:hover { background: #44403c; }
+
+  /* ── JSON editor modal ──────────────────────────────────────────── */
+  .ab-editor-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.75);
+    z-index: 1000;
+    flex-direction: column;
+  }
+  .ab-editor-modal.open { display: flex; }
+  .ab-editor-inner {
+    background: #1e1e1e;
+    margin: 20px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  }
+  .ab-editor-bar {
+    padding: 9px 14px;
+    background: #252526;
+    border-bottom: 1px solid #3c3c3c;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .ab-editor-bar-label { color: #aaa; font-size: 9pt; flex: 1; }
+  .ab-editor-container { flex: 1; }
+  .ab-editor-btn {
+    padding: 5px 14px;
+    font-size: 9pt;
+    font-weight: 600;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .ab-editor-btn-save { background: #0e639c; color: #fff; }
+  .ab-editor-btn-save:hover:not(:disabled) { background: #1177bb; }
+  .ab-editor-btn-save:disabled { background: #555; cursor: default; }
+  .ab-editor-btn-cancel { background: #3c3c3c; color: #ccc; }
+  .ab-editor-btn-cancel:hover { background: #4c4c4c; }
+
+  /* ── Print ──────────────────────────────────────────────────────── */
+  @media print {
+    body { padding: 0; max-width: 100%; }
+    .ab-notes, .ab-toolbar { display: none; }
+    @page { size: A4; margin: 45mm 20mm 25mm 25mm; }
+  }
+</style>
+</head>
+<body>
+
+{% if refnr %}
+<div class="ab-toolbar">
+  <span class="ab-toolbar-label">Anschreiben — {{ refnr }}{% if role %} · {{ role }}{% endif %}{% if model %} · {{ model }}{% endif %}</span>
+  <button onclick="openEditor()">Edit JSON</button>
+  <button id="archive-btn" onclick="archiveAnschreiben()">Archive</button>
+  <button id="render-btn" onclick="rerender()">Regenerate PDF</button>
+</div>
+
+<!-- JSON editor modal -->
+<div class="ab-editor-modal" id="ab-editor-modal">
+  <div class="ab-editor-inner">
+    <div class="ab-editor-bar">
+      <span class="ab-editor-bar-label">Edit JSON — {{ refnr }}{% if role %} · {{ role }}{% endif %}</span>
+      <button class="ab-editor-btn ab-editor-btn-save" id="ab-editor-save">Save &amp; Render</button>
+      <button class="ab-editor-btn ab-editor-btn-cancel" onclick="closeEditor()">Cancel</button>
+    </div>
+    <div class="ab-editor-container" id="ab-editor-container"></div>
+  </div>
+</div>
+<script>
+var _monacoReady = false;
+var _editor = null;
+var _LETTER_DATA = {{ letter_json }};
+
+function openEditor() {
+  document.getElementById('ab-editor-modal').classList.add('open');
+  if (_monacoReady) return;
+  _monacoReady = true;
+  var s = document.createElement('script');
+  s.src = 'https://unpkg.com/monaco-editor@0.52.2/min/vs/loader.js';
+  s.onload = function() {
+    require.config({ paths: { vs: 'https://unpkg.com/monaco-editor@0.52.2/min/vs' } });
+    require(['vs/editor/editor.main'], function() {
+      _editor = monaco.editor.create(document.getElementById('ab-editor-container'), {
+        value: JSON.stringify(_LETTER_DATA, null, 2),
+        language: 'json',
+        theme: 'vs-dark',
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false,
+        automaticLayout: true,
+        fontSize: 13,
+        tabSize: 2,
+      });
+    });
+  };
+  document.head.appendChild(s);
+}
+
+function closeEditor() {
+  document.getElementById('ab-editor-modal').classList.remove('open');
+}
+
+document.getElementById('ab-editor-save').onclick = function() {
+  if (!_editor) return;
+  var btn = this;
+  var value = _editor.getValue();
+  try { JSON.parse(value); } catch(e) {
+    btn.textContent = 'Invalid JSON'; setTimeout(function(){ btn.textContent = 'Save & Render'; }, 2000);
+    return;
+  }
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  fetch('/api/anschreiben/{{ refnr | urlencode }}/json?role={{ role or "devops" }}', {
+    method: 'PUT', headers: {'Content-Type': 'application/json'}, body: value,
+  })
+  .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(function() { window.location.reload(); })
+  .catch(function(e) { btn.textContent = 'Error: ' + e.message; btn.disabled = false; });
+};
+
+function archiveAnschreiben() {
+  var btn = document.getElementById('archive-btn');
+  var orig = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Archiving…';
+  fetch('/api/anschreiben/{{ refnr | urlencode }}/archive?role={{ role or "devops" }}', {method: 'POST'})
+    .then(function(r) { return r.json(); })
+    .then(function() { btn.textContent = 'Archived ✓'; setTimeout(function(){ btn.textContent = orig; btn.disabled = false; }, 3000); })
+    .catch(function() { btn.textContent = 'Error'; btn.disabled = false; });
+}
+
+function rerender() {
+  var btn = document.getElementById('render-btn');
+  btn.disabled = true;
+  btn.textContent = 'Rendering…';
+  fetch('/api/anschreiben/{{ refnr | urlencode }}/render?role={{ role or "devops" }}', {method: 'POST'})
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.url) {
+        btn.textContent = 'Done — download';
+        btn.disabled = false;
+        btn.onclick = function() { window.open(d.url); };
+      } else {
+        btn.textContent = 'Error';
+        btn.disabled = false;
+      }
+    })
+    .catch(function() { btn.textContent = 'Error'; btn.disabled = false; });
+}
+</script>
+{% endif %}
+
+<!-- Absender -->
+<div class="ab-absender">
+  <div class="ab-absender-name">{{ letter.candidate_name }}</div>
+  <div class="ab-absender-contact">
+    {% if letter.contact.city %}<span>{{ letter.contact.city }}</span>{% endif %}
+    {% if letter.contact.email %}<span>{{ letter.contact.email }}</span>{% endif %}
+    {% if letter.contact.phone %}<span>{{ letter.contact.phone }}</span>{% endif %}
+    {% if letter.contact.linkedin %}<span>{{ letter.contact.linkedin }}</span>{% endif %}
+  </div>
+</div>
+
+<hr class="ab-divider">
+
+<!-- Empfänger -->
+<div class="ab-empfaenger">
+  <div class="ab-empfaenger-firma">{{ letter.firma }}</div>
+  {% if letter.employer_street %}
+  <div>{{ letter.employer_street }}</div>
+  {% endif %}
+  {% if letter.employer_city_line %}
+  <div>{{ letter.employer_city_line }}</div>
+  {% endif %}
+</div>
+
+<!-- Datum -->
+<div class="ab-datum-row">{{ letter.date }}</div>
+
+<!-- Betreff -->
+<div class="ab-betreff">{{ letter.subject }}</div>
+
+<!-- Anrede -->
+<div class="ab-anrede">{{ letter.salutation }}</div>
+
+<!-- Body paragraphs -->
+<div class="ab-body">
+  {% for para in letter.body_paragraphs %}
+  <p class="ab-para">{{ para }}</p>
+  {% endfor %}
+</div>
+
+<!-- Grußformel & Unterschrift -->
+<div class="ab-gruss">
+  <div class="ab-gruss-text">{{ letter.closing }}</div>
+  <div class="ab-signature-space"></div>
+  <div class="ab-name">{{ letter.candidate_name }}</div>
+</div>
+
+<!-- Tailoring notes (screen only) -->
+{% if letter.tailoring_notes %}
+<div class="ab-notes">
+  <div class="ab-notes-title">Tailoring notes (not included in print):</div>
+  <ul>
+    {% for note in letter.tailoring_notes %}
+    <li>{{ note }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<!-- Debug JSON -->
+<script type="application/json" id="letter-data">{{ letter_json }}</script>
+
+</body>
+</html>
