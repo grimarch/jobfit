@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="{{ cv.language }}">
+<head>
+<meta charset="UTF-8">
+<title>{{ cv.name }} – CV</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Arial, "Helvetica Neue", sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    color: #1c1917;
+    background: #fff;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 28px 36px;
+  }
+
+  /* ── Header ──────────────────────────────────────────────────────── */
+  .cv-header {
+    border-bottom: 2px solid #1c1917;
+    padding-bottom: 6px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .cv-header-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .cv-header-text--with-photo {
+    min-height: 4.5cm;
+    justify-content: space-between;
+  }
+  .cv-name {
+    font-size: 20pt;
+    font-weight: 800;
+    letter-spacing: .02em;
+    color: #1c1917;
+    margin-bottom: 2px;
+  }
+  .cv-headline {
+    font-size: 12pt;
+    font-weight: 600;
+    letter-spacing: .03em;
+    color: #b45309;
+    margin-bottom: 0;
+  }
+  .cv-contact {
+    display: grid;
+    grid-template-columns: repeat(3, max-content);
+    column-gap: 28px;
+    align-items: start;
+    margin-top: auto;
+  }
+  .cv-header-text--with-photo .cv-contact {
+    margin-top: 0;
+  }
+  .cv-contact-col {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+  }
+  .cv-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 9pt;
+    white-space: nowrap;
+  }
+  .cv-contact-icon {
+    flex-shrink: 0;
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    vertical-align: middle;
+  }
+  .cv-contact-icon-text {
+    color: #a8a29e;
+    font-family: "Noto Sans Symbols 2", Arial, sans-serif;
+    font-size: 9pt;
+    line-height: 12px;
+    text-align: center;
+  }
+  .cv-contact-icon-loc {
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a8a29e'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  .cv-contact-icon-linkedin {
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a8a29e'%3E%3Cpath d='M20.45 20.45h-3.56v-5.59c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.95v5.68H9.34V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.26 2.37 4.26 5.45v6.29zM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14zM7.12 20.45H3.56V9h3.56v11.45z'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  .cv-contact-icon-github {
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a8a29e'%3E%3Cpath d='M12 .5C5.73.5.98 5.26.98 11.54c0 4.86 3.15 8.98 7.52 10.43.55.1.75-.24.75-.53 0-.26-.01-1.13-.02-2.05-3.06.67-3.71-1.31-3.71-1.31-.5-1.27-1.22-1.61-1.22-1.61-.99-.68.07-.67.07-.67 1.09.08 1.66 1.12 1.66 1.12.97 1.66 2.55 1.18 3.17.9.1-.7.38-1.18.69-1.45-2.44-.28-5.01-1.22-5.01-5.43 0-1.2.43-2.18 1.13-2.95-.11-.28-.49-1.43.11-2.98 0 0 .93-.3 3.05 1.13.89-.25 1.83-.37 2.77-.37.94 0 1.88.12 2.77.37 2.12-1.43 3.05-1.13 3.05-1.13.6 1.55.22 2.7.11 2.98.7.77 1.13 1.75 1.13 2.95 0 4.22-2.58 5.14-5.04 5.41.4.34.75 1.01.75 2.04 0 1.47-.01 2.66-.01 3.02 0 .29.2.63.76.52 4.36-1.45 7.5-5.57 7.5-10.43C23.02 5.26 18.27.5 12 .5z'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  .cv-contact-icon-xing {
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a8a29e'%3E%3Cpath d='M4.5 4.5h4.1l3.5 6.1-3.6 6.3H4.4l3.6-6.3L4.5 4.5zm11 0h4.1l-5.4 9.4 5.6 9.6h-4.2l-3.4-5.9-3.5 5.9H6.5l5.7-9.6L15.5 4.5z'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  .cv-contact-value {
+    color: #44403c;
+  }
+
+  /* Bewerbungsfoto: 3.5 × 4.5 cm (German standard) */
+  .cv-header-photo {
+    width: 3.5cm;
+    height: 4.5cm;
+    flex-shrink: 0;
+    overflow: hidden;
+    border: 1px solid #e7e5e4;
+  }
+  .cv-header-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+  }
+  .cv-header-photo-placeholder {
+    width: 3.5cm;
+    height: 4.5cm;
+    flex-shrink: 0;
+    border: 1.5px dashed #d6d3d1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 7.5pt;
+    color: #a8a29e;
+    letter-spacing: .04em;
+  }
+
+  /* ── Section ─────────────────────────────────────────────────────── */
+  .cv-section { margin-bottom: 16px; }
+  .cv-section--atomic { break-inside: avoid; }
+
+  .cv-section-title {
+    margin-bottom: 10px;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+  .cv-section-title-text {
+    display: inline-block;
+    font-size: 9.5pt;
+    font-weight: 700;
+    color: #1c1917;
+    border-bottom: 1.5px solid #b45309;
+    padding-bottom: 2px;
+  }
+  .cv-section-content {
+    break-before: avoid;
+    page-break-before: avoid;
+  }
+
+  /* ── Summary ─────────────────────────────────────────────────────── */
+  .cv-summary { font-size: 10pt; line-height: 1.55; color: #292524; orphans: 3; widows: 3; }
+
+  /* ── Experience ──────────────────────────────────────────────────── */
+  .cv-job { margin-bottom: 12px; break-inside: avoid; }
+  .cv-job:last-child { margin-bottom: 0; }
+
+  .cv-job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .cv-job-title  { font-weight: 700; font-size: 10.5pt; color: #1c1917; }
+  .cv-job-period {
+    font-size: 9pt;
+    color: #78716c;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .cv-job-company { font-size: 9.5pt; color: #78716c; margin-bottom: 5px; }
+  .cv-job-bullets { margin: 0; padding-left: 16px; }
+  .cv-job-bullets li { font-size: 10pt; color: #292524; margin-bottom: 2px; list-style-type: disc; orphans: 2; widows: 2; }
+
+  /* ── Skills ──────────────────────────────────────────────────────── */
+  .cv-skill-row { font-size: 9.5pt; margin-bottom: 3px; break-inside: avoid; }
+  .cv-skill-cat   { font-weight: 700; color: #44403c; }
+  .cv-skill-items { color: #78716c; }
+
+  /* ── Education / Certifications / Languages ──────────────────────── */
+  .cv-edu-entry { margin-bottom: 7px; break-inside: avoid; }
+  .cv-edu-entry:last-child { margin-bottom: 0; }
+
+  .cv-edu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .cv-edu-degree { font-weight: 700; font-size: 10pt; color: #1c1917; }
+  .cv-edu-period { font-size: 9pt; color: #78716c; white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .cv-edu-inst   { font-size: 9.5pt; color: #78716c; }
+
+  .cv-cert-list { margin: 0; padding-left: 16px; font-size: 9.5pt; color: #292524; }
+  .cv-cert-list li { margin-bottom: 2px; list-style-type: disc; break-inside: avoid; }
+
+  .cv-langs { font-size: 9.5pt; display: flex; flex-wrap: wrap; gap: 0 28px; }
+  .cv-lang-entry { white-space: nowrap; break-inside: avoid; }
+  .cv-lang-name  { font-weight: 700; color: #1c1917; }
+
+  /* ── Tailoring notes (screen only) ──────────────────────────────── */
+  .cv-notes {
+    margin-top: 20px;
+    padding: 10px 14px;
+    background: #fafaf9;
+    border-left: 3px solid #d6d3d1;
+    font-size: 9pt;
+    color: #78716c;
+  }
+  .cv-notes-title { font-weight: 700; margin-bottom: 5px; color: #57534e; }
+  .cv-notes ul { padding-left: 14px; }
+  .cv-notes li { margin-bottom: 2px; }
+
+  /* ── ATS Report (screen only) ────────────────────────────────────── */
+  .ats-report {
+    margin-top: 24px;
+    border: 1px solid #e7e5e4;
+    border-radius: 4px;
+    padding: 14px 18px;
+    font-size: 9.5pt;
+  }
+  .ats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .ats-title { font-weight: 700; font-size: 11pt; color: #1c1917; }
+  .ats-scores-header { display: flex; gap: 8px; align-items: flex-start; }
+  .ats-badge { text-align: center; padding: 4px 12px; border-radius: 3px; }
+  .ats-badge-val { font-size: 18pt; font-weight: 700; display: block; line-height: 1.1; }
+  .ats-badge-lbl { font-size: 7pt; font-weight: 600; letter-spacing: .04em; display: block; opacity: .75; }
+  .ats-overall-green  { background: #e4f5ed; color: #1a7a4e; }
+  .ats-overall-yellow { background: #fff4e6; color: #b45309; }
+  .ats-overall-red    { background: #fde8e8; color: #b91c1c; }
+
+  .ats-scores { margin-bottom: 14px; }
+  .ats-score-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+  .ats-score-label { width: 145px; flex-shrink: 0; color: #78716c; font-size: 9pt; }
+  .ats-bar-wrap { flex: 1; height: 7px; background: #e7e5e4; border-radius: 4px; overflow: hidden; }
+  .ats-bar { height: 100%; border-radius: 4px; }
+  .ats-score-val { width: 36px; text-align: right; font-size: 9pt; font-weight: 600; color: #44403c; }
+
+  .ats-platforms { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 9pt; }
+  .ats-platforms tr { border-bottom: 1px solid #f5f5f4; }
+  .ats-platforms tr:last-child { border-bottom: none; }
+  .ats-plat-name { padding: 4px 8px 4px 0; font-weight: 600; white-space: nowrap; width: 150px; color: #44403c; }
+  .ats-plat-icon { padding: 4px 10px 4px 0; font-weight: 700; white-space: nowrap; }
+  .ats-plat-note { padding: 4px 0; color: #78716c; }
+  .ats-icon-pass { color: #1a7a4e; }
+  .ats-icon-warn { color: #b45309; }
+  .ats-icon-fail { color: #b91c1c; }
+
+  .ats-flags {
+    background: #fef2f2;
+    border-left: 3px solid #e05252;
+    padding: 8px 12px;
+    border-radius: 0 3px 3px 0;
+    font-size: 9pt;
+  }
+  .ats-flags-title { font-weight: 700; color: #b91c1c; margin-bottom: 4px; }
+  .ats-flags ul { padding-left: 14px; margin: 0; }
+  .ats-flags li { margin-bottom: 2px; color: #7f1d1d; }
+
+  .ats-market {
+    margin-top: 10px;
+    background: #eff6ff;
+    border-left: 3px solid #3b82f6;
+    padding: 8px 12px;
+    border-radius: 0 3px 3px 0;
+    font-size: 9pt;
+  }
+  .ats-market-title { font-weight: 700; color: #1d4ed8; margin-bottom: 4px; }
+  .ats-market ul { padding-left: 14px; margin: 0; }
+  .ats-market li { margin-bottom: 2px; color: #1e3a8a; }
+
+  /* ── Preview toolbar (screen only) ──────────────────────────────── */
+  .cv-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 18px;
+    padding: 8px 12px;
+    background: #fafaf9;
+    border: 1px solid #e7e5e4;
+    border-radius: 4px;
+    font-size: 9pt;
+    color: #78716c;
+  }
+  .cv-toolbar-label { flex: 1; }
+  .cv-toolbar button {
+    padding: 5px 14px;
+    font-size: 9pt;
+    font-weight: 600;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    background: #1c1917;
+    color: #fff;
+  }
+  .cv-toolbar button:hover { background: #44403c; }
+  .cv-toolbar button:disabled { background: #a8a29e; cursor: default; }
+
+  /* ── JSON editor modal ──────────────────────────────────────────── */
+  .cv-editor-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.75);
+    z-index: 1000;
+    flex-direction: column;
+  }
+  .cv-editor-modal.open { display: flex; }
+  .cv-editor-inner {
+    background: #1e1e1e;
+    margin: 20px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  }
+  .cv-editor-bar {
+    padding: 9px 14px;
+    background: #252526;
+    border-bottom: 1px solid #3c3c3c;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .cv-editor-bar-label { color: #aaa; font-size: 9pt; flex: 1; }
+  .cv-editor-container { flex: 1; }
+  .cv-editor-btn {
+    padding: 5px 14px;
+    font-size: 9pt;
+    font-weight: 600;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .cv-editor-btn-save { background: #0e639c; color: #fff; }
+  .cv-editor-btn-save:hover:not(:disabled) { background: #1177bb; }
+  .cv-editor-btn-save:disabled { background: #555; cursor: default; }
+  .cv-editor-btn-cancel { background: #3c3c3c; color: #ccc; }
+  .cv-editor-btn-cancel:hover { background: #4c4c4c; }
+
+  /* ── Print ───────────────────────────────────────────────────────── */
+  @media print {
+    body { padding: 0; max-width: 100%; font-size: 10pt; }
+    .cv-notes, .ats-report, .cv-toolbar { display: none; }
+    .cv-header-photo-placeholder { display: none; }
+    @page { size: A4; margin: 18mm 18mm 16mm 18mm; }
+  }
+</style>
+</head>
+<body>
+
+{% if refnr %}
+<!-- Preview toolbar (screen only) -->
+<div class="cv-toolbar">
+  <span class="cv-toolbar-label">Preview — {{ refnr }}{% if role %} · {{ role }}{% endif %}{% if model %} · {{ model }}{% endif %}</span>
+  <button onclick="openEditor()">Edit JSON</button>
+  <button id="archive-btn" onclick="archiveCv()">Archive</button>
+  <button id="render-btn" onclick="rerender()">Regenerate PDF</button>
+</div>
+
+<!-- JSON editor modal -->
+<div class="cv-editor-modal" id="cv-editor-modal">
+  <div class="cv-editor-inner">
+    <div class="cv-editor-bar">
+      <span class="cv-editor-bar-label">Edit JSON — {{ refnr }}{% if role %} · {{ role }}{% endif %}</span>
+      <button class="cv-editor-btn cv-editor-btn-save" id="cv-editor-save">Save &amp; Render</button>
+      <button class="cv-editor-btn cv-editor-btn-cancel" onclick="closeEditor()">Cancel</button>
+    </div>
+    <div class="cv-editor-container" id="cv-editor-container"></div>
+  </div>
+</div>
+<script>
+var _monacoReady = false;
+var _editor = null;
+var _CV_DATA = {{ cv_json }};
+
+function openEditor() {
+  document.getElementById('cv-editor-modal').classList.add('open');
+  if (_monacoReady) return;
+  _monacoReady = true;
+  var s = document.createElement('script');
+  s.src = 'https://unpkg.com/monaco-editor@0.52.2/min/vs/loader.js';
+  s.onload = function() {
+    require.config({ paths: { vs: 'https://unpkg.com/monaco-editor@0.52.2/min/vs' } });
+    require(['vs/editor/editor.main'], function() {
+      _editor = monaco.editor.create(document.getElementById('cv-editor-container'), {
+        value: JSON.stringify(_CV_DATA, null, 2),
+        language: 'json',
+        theme: 'vs-dark',
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false,
+        automaticLayout: true,
+        fontSize: 13,
+        tabSize: 2,
+      });
+    });
+  };
+  document.head.appendChild(s);
+}
+
+function closeEditor() {
+  document.getElementById('cv-editor-modal').classList.remove('open');
+}
+
+document.getElementById('cv-editor-save').onclick = function() {
+  if (!_editor) return;
+  var btn = this;
+  var value = _editor.getValue();
+  try { JSON.parse(value); } catch(e) {
+    btn.textContent = 'Invalid JSON'; setTimeout(function(){ btn.textContent = 'Save & Render'; }, 2000);
+    return;
+  }
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  fetch('/api/cv/{{ refnr | urlencode }}/json?role={{ role or "devops" }}', {
+    method: 'PUT', headers: {'Content-Type': 'application/json'}, body: value,
+  })
+  .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(function() { window.location.reload(); })
+  .catch(function(e) {
+    btn.textContent = 'Error: ' + e.message; btn.disabled = false;
+  });
+};
+</script>
+<script>
+function archiveCv() {
+  var btn = document.getElementById('archive-btn');
+  var orig = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Archiving…';
+  fetch('/api/cv/{{ refnr | urlencode }}/archive?role={{ role or "devops" }}', {method:'POST'})
+    .then(function(r){ return r.json(); })
+    .then(function(){ btn.textContent = 'Archived ✓'; setTimeout(function(){ btn.textContent = orig; btn.disabled = false; }, 3000); })
+    .catch(function(){ btn.textContent = 'Error'; btn.disabled = false; });
+}
+function rerender() {
+  var btn = document.getElementById('render-btn');
+  btn.disabled = true;
+  btn.textContent = 'Rendering…';
+  fetch('/api/cv/{{ refnr | urlencode }}/render?role={{ role or "devops" }}', {method:'POST'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.url) {
+        btn.textContent = 'Done — download';
+        btn.disabled = false;
+        btn.onclick = function(){ window.open(d.url); };
+      } else {
+        btn.textContent = 'Error';
+        btn.disabled = false;
+      }
+    })
+    .catch(function(){ btn.textContent = 'Error'; btn.disabled = false; });
+}
+</script>
+{% endif %}
+
+<!-- Header -->
+<div class="cv-header">
+  <div class="cv-header-text{% if photo %} cv-header-text--with-photo{% endif %}">
+    <div>
+      <div class="cv-name">{{ cv.name }}</div>
+      {% if cv.headline %}<div class="cv-headline">{{ cv.headline }}</div>{% endif %}
+    </div>
+    <div class="cv-contact">
+      {% if cv.contact.city or cv.contact.linkedin %}
+      <div class="cv-contact-col">
+        {% if cv.contact.city %}
+        <div class="cv-contact-item">
+          <span class="cv-contact-icon cv-contact-icon-loc" aria-hidden="true"></span>
+          <span class="cv-contact-value">{{ cv.contact.city }}</span>
+        </div>
+        {% endif %}
+        {% if cv.contact.linkedin %}
+        <div class="cv-contact-item">
+          <span class="cv-contact-icon cv-contact-icon-linkedin" aria-hidden="true"></span>
+          <span class="cv-contact-value">{{ cv.contact.linkedin }}</span>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% if cv.contact.email or cv.contact.github %}
+      <div class="cv-contact-col">
+        {% if cv.contact.email %}
+        <div class="cv-contact-item">
+          <span class="cv-contact-icon cv-contact-icon-text" aria-hidden="true">&#9993;</span>
+          <span class="cv-contact-value">{{ cv.contact.email }}</span>
+        </div>
+        {% endif %}
+        {% if cv.contact.github %}
+        <div class="cv-contact-item">
+          <span class="cv-contact-icon cv-contact-icon-github" aria-hidden="true"></span>
+          <span class="cv-contact-value">{{ cv.contact.github }}</span>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% if cv.contact.phone or cv.contact.xing %}
+      <div class="cv-contact-col">
+        {% if cv.contact.phone %}
+        <div class="cv-contact-item">
+          <span class="cv-contact-icon cv-contact-icon-text" aria-hidden="true">&#9742;</span>
+          <span class="cv-contact-value">{{ cv.contact.phone }}</span>
+        </div>
+        {% endif %}
+        {% if cv.contact.xing %}
+        <div class="cv-contact-item">
+          <span class="cv-contact-icon cv-contact-icon-xing" aria-hidden="true"></span>
+          <span class="cv-contact-value">{{ cv.contact.xing }}</span>
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% if photo %}
+  <div class="cv-header-photo">
+    <img src="{{ photo }}" alt="Bewerbungsfoto">
+  </div>
+  {% else %}
+  <div class="cv-header-photo-placeholder">Foto</div>
+  {% endif %}
+</div>
+
+<!-- Summary / Profil -->
+<div class="cv-section cv-section--atomic">
+  <div class="cv-section-title">
+    <span class="cv-section-title-text">{% if cv.language == 'de' %}Profil{% else %}Profile{% endif %}</span>
+  </div>
+  <div class="cv-section-content">
+    <div class="cv-summary">{{ cv.summary }}</div>
+  </div>
+</div>
+
+<!-- Experience / Berufserfahrung -->
+{% if cv.experience %}
+<div class="cv-section">
+  <div class="cv-section-title">
+    <span class="cv-section-title-text">{% if cv.language == 'de' %}Berufserfahrung{% else %}Experience{% endif %}</span>
+  </div>
+  <div class="cv-section-content">
+  {% for job in cv.experience %}
+  <div class="cv-job">
+    <div class="cv-job-header">
+      <span class="cv-job-title">{{ job.title }}</span>
+      <span class="cv-job-period">{{ job.period }}</span>
+    </div>
+    {% if job.company or job.location %}<div class="cv-job-company">{% if job.company %}{{ job.company }}{% endif %}{% if job.company and job.location %} · {% endif %}{% if job.location %}{{ job.location }}{% endif %}</div>{% endif %}
+    {% if job.bullets %}
+    <ul class="cv-job-bullets">
+      {% for bullet in job.bullets %}
+      <li>{{ bullet }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+  {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Skills / Kenntnisse -->
+{% if cv.skills %}
+<div class="cv-section">
+  <div class="cv-section-title">
+    <span class="cv-section-title-text">{% if cv.language == 'de' %}Kenntnisse{% else %}Skills{% endif %}</span>
+  </div>
+  <div class="cv-section-content">
+  {% for group in cv.skills %}
+  <div class="cv-skill-row">
+    <span class="cv-skill-cat">{{ group.category }}:</span>
+    <span class="cv-skill-items"> {{ group['items'] | join(', ') }}</span>
+  </div>
+  {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Education / Ausbildung -->
+{% if cv.education %}
+<div class="cv-section">
+  <div class="cv-section-title">
+    <span class="cv-section-title-text">{% if cv.language == 'de' %}Ausbildung{% else %}Education{% endif %}</span>
+  </div>
+  <div class="cv-section-content">
+  {% for edu in cv.education %}
+  <div class="cv-edu-entry">
+    <div class="cv-edu-header">
+      <span class="cv-edu-degree">{{ edu.degree }}</span>
+      {% if edu.period %}<span class="cv-edu-period">{{ edu.period }}</span>{% endif %}
+    </div>
+    <div class="cv-edu-inst">{{ edu.institution }}{% if edu.location %} · {{ edu.location }}{% endif %}</div>
+  </div>
+  {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Certifications / Zertifizierungen -->
+{% if cv.certifications %}
+<div class="cv-section cv-section--atomic">
+  <div class="cv-section-title">
+    <span class="cv-section-title-text">{% if cv.language == 'de' %}Zertifizierungen{% else %}Certifications{% endif %}</span>
+  </div>
+  <div class="cv-section-content">
+  <ul class="cv-cert-list">
+    {% for cert in cv.certifications %}
+    <li>{{ cert }}</li>
+    {% endfor %}
+  </ul>
+  </div>
+</div>
+{% endif %}
+
+<!-- Languages / Sprachen -->
+{% if cv.languages %}
+<div class="cv-section cv-section--atomic">
+  <div class="cv-section-title">
+    <span class="cv-section-title-text">{% if cv.language == 'de' %}Sprachen{% else %}Languages{% endif %}</span>
+  </div>
+  <div class="cv-section-content">
+  <div class="cv-langs">
+    {% for lang in cv.languages %}
+    <span class="cv-lang-entry">
+      <span class="cv-lang-name">{{ lang.language }}</span>
+      {% if lang.level %} – {{ lang.level }}{% endif %}
+    </span>
+    {% endfor %}
+  </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Tailoring notes (screen only) -->
+{% if cv.tailoring_notes %}
+<div class="cv-notes">
+  <div class="cv-notes-title">Tailoring notes (not included in print):</div>
+  <ul>
+    {% for note in cv.tailoring_notes %}
+    <li>{{ note }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<!-- ATS Compatibility Report (screen only) -->
+{% if ats %}
+{% set oc = 'ats-overall-green' if ats.overall_score >= 75 else ('ats-overall-yellow' if ats.overall_score >= 55 else 'ats-overall-red') %}
+{% set cc = 'ats-overall-green' if ats.completeness_score >= 75 else ('ats-overall-yellow' if ats.completeness_score >= 55 else 'ats-overall-red') %}
+<div class="ats-report">
+  <div class="ats-header">
+    <span class="ats-title">ATS Compatibility Report</span>
+    <div class="ats-scores-header">
+      <div class="ats-badge {{ oc }}">
+        <span class="ats-badge-val">{{ ats.overall_score }}</span>
+        <span class="ats-badge-lbl">ATS PARSE</span>
+      </div>
+      <div class="ats-badge {{ cc }}">
+        <span class="ats-badge-val">{{ ats.completeness_score }}</span>
+        <span class="ats-badge-lbl">COMPLETENESS</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ats-scores">
+    {% set bars = [
+      ('Keyword Coverage', ats.keyword_score),
+      ('Section Structure', ats.section_score),
+      ('PDF Parsability',   ats.parsability_score),
+      ('Date Formats',      ats.date_score),
+      ('Contact Info',      ats.contact_score),
+    ] %}
+    {% for label, val in bars %}
+    {% set bc = '#1a7a4e' if val >= 75 else ('#b45309' if val >= 50 else '#e05252') %}
+    <div class="ats-score-row">
+      <span class="ats-score-label">{{ label }}</span>
+      <div class="ats-bar-wrap"><div class="ats-bar" style="width:{{ val }}%;background:{{ bc }}"></div></div>
+      <span class="ats-score-val">{{ val }}%</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <table class="ats-platforms">
+    {% for p in ats.platform_outlooks %}
+    <tr>
+      <td class="ats-plat-name">{{ p.name }}</td>
+      <td class="ats-plat-icon ats-icon-{{ p.status }}">
+        {% if p.status == 'pass' %}✓ likely pass
+        {% elif p.status == 'warn' %}⚠ check
+        {% else %}✗ risk
+        {% endif %}
+      </td>
+      <td class="ats-plat-note">{{ p.note }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+
+  {% if ats.red_flags %}
+  <div class="ats-flags">
+    <div class="ats-flags-title">Red Flags ({{ ats.red_flags | length }}):</div>
+    <ul>
+      {% for flag in ats.red_flags %}
+      <li>{{ flag }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% if ats.market_notes %}
+  <div class="ats-market">
+    <div class="ats-market-title">{% if cv.language == 'de' %}Markthinweise{% else %}Market Notes{% endif %}</div>
+    <ul>
+      {% for note in ats.market_notes %}
+      <li>{{ note }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+</body>
+</html>
