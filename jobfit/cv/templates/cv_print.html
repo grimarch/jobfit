@@ -165,7 +165,7 @@
   .cv-skill-items { color: #78716c; }
 
   /* ── Experience ──────────────────────────────────────────────────── */
-  .cv-job { margin-bottom: 12px; break-inside: avoid; }
+  .cv-job { margin-bottom: 12px; }
   .cv-job:last-child { margin-bottom: 0; }
 
   .cv-job-header {
@@ -173,6 +173,7 @@
     justify-content: space-between;
     align-items: baseline;
     gap: 8px;
+    break-after: avoid;
   }
   .cv-job-title  { font-weight: 700; font-size: 10.5pt; color: #1c1917; }
   .cv-job-period {
@@ -182,9 +183,9 @@
     flex-shrink: 0;
     font-variant-numeric: tabular-nums;
   }
-  .cv-job-company { font-size: 9.5pt; color: #78716c; margin-bottom: 5px; }
+  .cv-job-company { font-size: 9.5pt; color: #78716c; margin-bottom: 5px; break-after: avoid; }
   .cv-job-bullets { margin: 0; padding-left: 16px; }
-  .cv-job-bullets li { font-size: 10pt; color: #292524; margin-bottom: 2px; list-style-type: disc; orphans: 2; widows: 2; }
+  .cv-job-bullets li { font-size: 10pt; color: #292524; margin-bottom: 2px; list-style-type: disc; break-inside: avoid; orphans: 2; widows: 2; }
 
   /* ── Education / Certifications / Languages ──────────────────────── */
   .cv-edu-entry { margin-bottom: 7px; break-inside: avoid; }
