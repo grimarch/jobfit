@@ -39,8 +39,7 @@ services:
     ports:
       - "8888:8888"
     env_file:
-      - path: .env
-        required: false
+      - path: ${JOBFIT_SECRETS_DIR}/.env
     depends_on:
       db:
         condition: service_healthy
