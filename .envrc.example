@@ -1,0 +1,1 @@
+export JOBFIT_SECRETS_DIR="/path/to/secrets/jobfit"
