@@ -48,7 +48,6 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-jobfit}:${POSTGRES_PASSWORD:-jobfit}@db:5432/${POSTGRES_DB:-jobfit}
       EVERJOBS_URL: http://everjobs:3001
       APP_HOST_PORT: "8888"
-      JOBFIT_DATA_DIR: /secrets/jobfit/data
     volumes:
       - ${JOBFIT_SECRETS_DIR}/data:/secrets/jobfit/data
       - ./logs:/app/logs

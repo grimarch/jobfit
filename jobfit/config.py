@@ -23,7 +23,17 @@ def _resolve_data_dir() -> Path:
 
 DATA_DIR = _resolve_data_dir()
 RAW_DIR = DATA_DIR / "raw"
-REPORTS_DIR = Path("dashboards")
+
+
+def _resolve_reports_dir() -> Path:
+    raw = os.environ.get("JOBFIT_REPORTS_DIR", "").strip()
+    path = Path(raw).expanduser() if raw else Path("dashboards")
+    if not path.is_absolute():
+        path = Path.cwd() / path
+    return path
+
+
+REPORTS_DIR = _resolve_reports_dir()
 _data_dir_logged = False
 
 
@@ -47,6 +57,12 @@ def _log_data_dir(data_dir: Path, role_input: Path) -> None:
         data_dir,
         role_input,
     )
+
+
+def log_reports_dir() -> None:
+    from loguru import logger
+
+    logger.info("Using reports directory: {}", REPORTS_DIR.resolve())
 
 
 def ensure_raw_dir() -> None:
