@@ -70,3 +70,4 @@ data/*.db
 data/.pg_migrated
 /dashboards/
 /reports/
+.migration/
