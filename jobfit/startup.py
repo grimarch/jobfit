@@ -122,7 +122,12 @@ def check_startup(role_slug: str = DEFAULT_ROLE) -> None:
 
 
 def main() -> None:
+    from jobfit._log import setup as log_setup
+    from jobfit.config import log_data_dir
+
     role_slug = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_ROLE
+    log_setup("startup")
+    log_data_dir()
     try:
         check_startup(role_slug)
     except RuntimeError as exc:

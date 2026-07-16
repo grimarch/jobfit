@@ -1,16 +1,52 @@
 """All constants, paths, REGION_NAMES, and configuration for jobfit."""
 
+import os
 import re
 from pathlib import Path
 
-from loguru import logger
 from jobfit.roles import DEFAULT_ROLE, ROLES
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 
-DATA_DIR = Path("data")
+def default_data_dir() -> Path:
+    """Default data root: ~/Projects/secrets/jobfit/data (outside the repo)."""
+    return Path.home() / "Projects" / "secrets" / "jobfit" / "data"
+
+
+def _resolve_data_dir() -> Path:
+    raw = os.environ.get("JOBFIT_DATA_DIR", "").strip()
+    path = Path(raw).expanduser() if raw else default_data_dir()
+    if not path.is_absolute():
+        path = Path.cwd() / path
+    return path
+
+
+DATA_DIR = _resolve_data_dir()
 RAW_DIR = DATA_DIR / "raw"
 REPORTS_DIR = Path("dashboards")
+_data_dir_logged = False
+
+
+def log_data_dir() -> None:
+    """Log resolved personal data root once per process."""
+    global _data_dir_logged
+    if _data_dir_logged:
+        return
+    _data_dir_logged = True
+    _log_data_dir(
+        DATA_DIR.resolve(),
+        role_input_dir(DEFAULT_ROLE).resolve(),
+    )
+
+
+def _log_data_dir(data_dir: Path, role_input: Path) -> None:
+    from loguru import logger
+
+    logger.info(
+        "Using data directory: {} (role input example: {})",
+        data_dir,
+        role_input,
+    )
 
 
 def ensure_raw_dir() -> None:

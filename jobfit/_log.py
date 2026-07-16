@@ -63,6 +63,10 @@ def setup(cmd: str) -> None:
     intercept_stdlib_logging("openai")
     logger.debug(f"=== jobfit {cmd} ===")
 
+    from jobfit.config import log_data_dir
+
+    log_data_dir()
+
 
 def intercept_stdlib_logging(*logger_names: str) -> None:
     """Redirect stdlib loggers (e.g. uvicorn) into loguru."""
