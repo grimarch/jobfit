@@ -20,7 +20,7 @@ def write_output(content: str | bytes, path: Path) -> Path:
     return path
 
 
-def generate_doc(mod: Any, refnr: str, output: str | None, open_after: bool, html: bool, preview: bool, print_prompt: bool, role_obj: Any) -> None:
+def generate_doc(mod: Any, refnr: str, output: str | None, open_after: bool, html: bool, preview: bool, print_prompt: bool, role_obj: Any, save_prompt: str | None = None) -> None:
     """Shared dispatch handler for cv generate and cv anschreiben commands."""
     from jobfit.llm import resolve_key
 
@@ -40,6 +40,26 @@ def generate_doc(mod: Any, refnr: str, output: str | None, open_after: bool, htm
                 model=resolve_model(getattr(mod, "PROMPT_MODEL_VAR", "CV_MODEL")),
                 provider=resolve_provider(getattr(mod, "PROMPT_COMMAND_PREFIX", "CV")),
             )
+        elif save_prompt:
+            from jobfit.llm import resolve_model, resolve_provider
+            from jobfit.prompt_display import save_llm_prompt
+
+            if save_prompt == "__auto__":
+                doc_label = getattr(mod, "PROMPT_DOC_LABEL", "prompt").lower().replace(" ", "_")
+                save_path = Path("/app/prompts") / f"{refnr}_{doc_label}.md"
+            else:
+                save_path = Path(save_prompt)
+
+            out = save_llm_prompt(
+                save_path,
+                system=getattr(mod, "SYSTEM_PROMPT", ""),
+                user=mod.build_prompt_for_job(refnr, role_obj.slug, role_obj.skills),
+                refnr=refnr,
+                doc_label=getattr(mod, "PROMPT_DOC_LABEL", "LLM"),
+                model=resolve_model(getattr(mod, "PROMPT_MODEL_VAR", "CV_MODEL")),
+                provider=resolve_provider(getattr(mod, "PROMPT_COMMAND_PREFIX", "CV")),
+            )
+            logger.info(f"Prompt saved: file://{out.resolve()}")
         else:
             api_key = resolve_key()
             if html:

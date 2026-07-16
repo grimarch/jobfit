@@ -52,6 +52,7 @@ services:
     volumes:
       - ${JOBFIT_SECRETS_DIR}/data:/secrets/jobfit/data
       - ./logs:/app/logs
+      - ./prompts:/app/prompts
 
 volumes:
   postgres_data:
