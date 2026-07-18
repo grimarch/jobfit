@@ -29,8 +29,9 @@ def run(role_slug: str) -> None:
     dashboards.cv.save(role_obj)
     dashboards.listings.save(role_obj)
     dashboards.targets.save(role_obj)
-    if classify.unclassified_count(role_slug):
-        logger.warning(f"⚠  unclassified jobs — run: jobfit classify --role {role_slug}")
+    unclassified = classify.unclassified_count(role_slug)
+    if unclassified:
+        logger.warning(f"⚠  {unclassified} unclassified jobs — run: jobfit classify --role {role_slug}")
     if not brands.has_any(role_slug):
         logger.warning(f"⚠  no known brands — run: jobfit brands --role {role_slug}")
     dashboards.print_links("all")
@@ -39,5 +40,6 @@ def run(role_slug: str) -> None:
 def run_for_serve(role_slug: str) -> None:
     """Serve-triggered cycle: fetch → mark-closed (server rebuilds dashboards via cache)."""
     _fetch_and_close(role_slug)
-    if classify.unclassified_count(role_slug):
-        logger.warning(f"⚠  unclassified jobs — run: jobfit classify --role {role_slug}")
+    unclassified = classify.unclassified_count(role_slug)
+    if unclassified:
+        logger.warning(f"⚠  {unclassified} unclassified jobs — run: jobfit classify --role {role_slug}")

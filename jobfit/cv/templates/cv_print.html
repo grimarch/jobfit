@@ -159,8 +159,13 @@
   /* ── Summary ─────────────────────────────────────────────────────── */
   .cv-summary { font-size: 10pt; line-height: 1.55; color: #292524; orphans: 3; widows: 3; }
 
+  /* ── Skills ──────────────────────────────────────────────────────── */
+  .cv-skill-row { font-size: 9.5pt; margin-bottom: 3px; break-inside: avoid; }
+  .cv-skill-cat   { font-weight: 700; color: #44403c; }
+  .cv-skill-items { color: #78716c; }
+
   /* ── Experience ──────────────────────────────────────────────────── */
-  .cv-job { margin-bottom: 12px; break-inside: avoid; }
+  .cv-job { margin-bottom: 12px; }
   .cv-job:last-child { margin-bottom: 0; }
 
   .cv-job-header {
@@ -168,6 +173,7 @@
     justify-content: space-between;
     align-items: baseline;
     gap: 8px;
+    break-after: avoid;
   }
   .cv-job-title  { font-weight: 700; font-size: 10.5pt; color: #1c1917; }
   .cv-job-period {
@@ -177,14 +183,9 @@
     flex-shrink: 0;
     font-variant-numeric: tabular-nums;
   }
-  .cv-job-company { font-size: 9.5pt; color: #78716c; margin-bottom: 5px; }
+  .cv-job-company { font-size: 9.5pt; color: #78716c; margin-bottom: 5px; break-after: avoid; }
   .cv-job-bullets { margin: 0; padding-left: 16px; }
-  .cv-job-bullets li { font-size: 10pt; color: #292524; margin-bottom: 2px; list-style-type: disc; orphans: 2; widows: 2; }
-
-  /* ── Skills ──────────────────────────────────────────────────────── */
-  .cv-skill-row { font-size: 9.5pt; margin-bottom: 3px; break-inside: avoid; }
-  .cv-skill-cat   { font-weight: 700; color: #44403c; }
-  .cv-skill-items { color: #78716c; }
+  .cv-job-bullets li { font-size: 10pt; color: #292524; margin-bottom: 2px; list-style-type: disc; break-inside: avoid; orphans: 2; widows: 2; }
 
   /* ── Education / Certifications / Languages ──────────────────────── */
   .cv-edu-entry { margin-bottom: 7px; break-inside: avoid; }
@@ -540,6 +541,23 @@ function rerender() {
   </div>
 </div>
 
+<!-- Skills / Kenntnisse -->
+{% if cv.skills %}
+<div class="cv-section">
+  <div class="cv-section-title">
+    <span class="cv-section-title-text">{% if cv.language == 'de' %}Kenntnisse{% else %}Skills{% endif %}</span>
+  </div>
+  <div class="cv-section-content">
+  {% for group in cv.skills %}
+  <div class="cv-skill-row">
+    <span class="cv-skill-cat">{{ group.category }}:</span>
+    <span class="cv-skill-items"> {{ group['items'] | join(', ') }}</span>
+  </div>
+  {% endfor %}
+  </div>
+</div>
+{% endif %}
+
 <!-- Experience / Berufserfahrung -->
 {% if cv.experience %}
 <div class="cv-section">
@@ -561,23 +579,6 @@ function rerender() {
       {% endfor %}
     </ul>
     {% endif %}
-  </div>
-  {% endfor %}
-  </div>
-</div>
-{% endif %}
-
-<!-- Skills / Kenntnisse -->
-{% if cv.skills %}
-<div class="cv-section">
-  <div class="cv-section-title">
-    <span class="cv-section-title-text">{% if cv.language == 'de' %}Kenntnisse{% else %}Skills{% endif %}</span>
-  </div>
-  <div class="cv-section-content">
-  {% for group in cv.skills %}
-  <div class="cv-skill-row">
-    <span class="cv-skill-cat">{{ group.category }}:</span>
-    <span class="cv-skill-items"> {{ group['items'] | join(', ') }}</span>
   </div>
   {% endfor %}
   </div>

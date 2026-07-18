@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+from pathlib import Path
 from typing import Any
 
 _PRIVACY_TOKEN_RE = re.compile(
@@ -138,6 +139,54 @@ def _render_section(title: str, body: str) -> Any:
         return None
 
     return Panel(_highlight_privacy_tokens(body), title=title, border_style="dim")
+
+
+def save_llm_prompt(
+    path: Path,
+    *,
+    system: str,
+    user: str,
+    refnr: str,
+    doc_label: str,
+    model: str,
+    provider: str,
+) -> Path:
+    """Save system + user prompts to file; format inferred from extension (.json or .md)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.suffix == ".json":
+        payload = {
+            "refnr": refnr,
+            "doc_label": doc_label,
+            "model": model,
+            "provider": provider,
+            "tokens_est": estimate_tokens(system) + estimate_tokens(user),
+            "system": system,
+            "user": user,
+        }
+        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        return path
+    else:
+        system_tokens = estimate_tokens(system)
+        user_tokens = estimate_tokens(user)
+        lines: list[str] = [
+            f"# {doc_label} prompt — {refnr}",
+            f"provider={provider} model={model} "
+            f"~{system_tokens + user_tokens:,} tokens "
+            f"(system ~{system_tokens:,}, user ~{user_tokens:,})",
+            "",
+            "## SYSTEM",
+            "",
+            system,
+            "",
+            "## USER",
+            "",
+        ]
+        for title, body in split_prompt_sections(user):
+            lines.append(f"### {title}")
+            lines.append(body)
+            lines.append("")
+        path.write_text("\n".join(lines), encoding="utf-8")
+    return path
 
 
 def print_llm_prompt(

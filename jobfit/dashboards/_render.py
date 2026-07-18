@@ -154,6 +154,7 @@ def _job_card_html(job: dict[str, Any], profile: dict[str, Any] | None = None) -
 
 def ensure_plotly_js(reports_dir: Path) -> None:
     """Copy plotly.min.js from package data into reports_dir (once)."""
+    reports_dir.mkdir(parents=True, exist_ok=True)
     dest = reports_dir / "plotly.min.js"
     if not dest.exists():
         try:

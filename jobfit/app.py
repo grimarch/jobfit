@@ -25,7 +25,7 @@ from jobfit.cache import (
     render_skills,
     render_targets,
 )
-from jobfit.config import REPORTS_DIR
+from jobfit.config import REPORTS_DIR, log_data_dir, log_reports_dir
 from jobfit.db import get_session
 from jobfit.db.models import Classification as ClsModel
 from jobfit.db.models import Job as JobModel
@@ -38,6 +38,8 @@ from jobfit.startup import check_startup
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     FastAPICache.init(InMemoryBackend())
+    log_data_dir()
+    log_reports_dir()
     check_startup(DEFAULT_ROLE)
     await build_all()
     logger.info("Dashboards ready — http://127.0.0.1:8888")

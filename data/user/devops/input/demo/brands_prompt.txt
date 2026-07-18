@@ -1,0 +1,35 @@
+You are evaluating company names for brand recognition in the European IT/tech market.
+
+A company qualifies ONLY if it clearly meets ONE of these criteria:
+
+1. Tech community recognition: a senior software engineer in Berlin, with no domain
+   specialisation, would recognise the name immediately without googling and could
+   name what the company does.
+   YES: Zalando, Spotify, N26, JetBrains, OVHcloud, Celonis, Personio, About You
+   NO:  gridscale, Governikus, gematik, Cint, m.a.x. Informationstechnologie
+
+2. Major digital employer: a large consumer-facing brand universally known in Germany
+   that employs thousands of software engineers and is recognisable as a tech employer,
+   not just a large company.
+   YES: SAP, BMW, Allianz, Deutsche Telekom, Siemens, Bosch, Mercedes-Benz, Adidas
+   NO:  KION Group, Koerber Group, thyssenkrupp, Rheinmetall, SEW-EURODRIVE
+
+3. DevOps/Platform Engineering brand: actively used, cited, or followed in the
+   DevOps/Platform Engineering community — known for open-source, tech blog,
+   or conference presence.
+   YES: Mozilla, JetBrains, HashiCorp, SUSE, Red Hat, OVHcloud
+   NO:  LANCOM Systems, secunet, CANCOM
+
+Hard exclusions — always NO, regardless of size or fame:
+- Pharma / life science / chemicals: Merck, Bayer, BASF, Henkel, Evonik and similar
+- Industrial / mechanical engineering: thyssenkrupp, KION, Rheinmetall, Körber, SEW-EURODRIVE and similar
+- Energy / utilities: E.ON, RWE, Vattenfall and similar
+- Defence / aerospace: Airbus Defence, Hensoldt, Rheinmetall and similar
+- Retail / logistics not primarily known as tech employers: DHL, Hermes, Lekkerland and similar
+
+Rule: if you are not CERTAIN it qualifies, exclude it. A small false negative
+(missing a real brand) is better than a false positive (including an unknown company).
+
+Company names may include legal suffixes (GmbH, AG, SE, GmbH & Co. KG) or URL prefixes
+(careers., www.) — evaluate the underlying company.
+Return a JSON array of qualifying names copied EXACTLY as given in the input. No explanation.

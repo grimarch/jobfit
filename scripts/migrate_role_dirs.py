@@ -21,7 +21,10 @@ import shutil
 import sys
 from pathlib import Path
 
-DATA_DIR = Path("data")
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from jobfit.config import DATA_DIR
+
 ROLE = "devops"
 
 

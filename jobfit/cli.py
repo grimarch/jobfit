@@ -113,10 +113,11 @@ def cmd_cv_extract(file: str, role: str) -> None:
 @click.option("--html", is_flag=True, help="Output HTML instead of PDF")
 @click.option("--preview", is_flag=True, help="Render from existing JSON, no LLM")
 @click.option("--print-prompt", "print_prompt", is_flag=True, help="Print formatted LLM prompt (system + user)")
+@click.option("--save-prompt", "save_prompt", is_flag=False, flag_value="__auto__", default=None, metavar="PATH", help="Save LLM prompt to file and exit; PATH optional (.md or .json, default: $JOBFIT_DATA_DIR/../prompts/)")
 @role_option
-def cmd_cv_generate(refnr: str, output: str | None, open_after: bool, html: bool, preview: bool, print_prompt: bool, role: str) -> None:
+def cmd_cv_generate(refnr: str, output: str | None, open_after: bool, html: bool, preview: bool, print_prompt: bool, save_prompt: str | None, role: str) -> None:
     from jobfit.cv import generator as cv_generator
-    generate_doc(cv_generator, refnr, output, open_after, html, preview, print_prompt, ROLES[role])
+    generate_doc(cv_generator, refnr, output, open_after, html, preview, print_prompt, ROLES[role], save_prompt)
 
 
 @cv_group.command(name="anschreiben")
@@ -126,10 +127,11 @@ def cmd_cv_generate(refnr: str, output: str | None, open_after: bool, html: bool
 @click.option("--html", is_flag=True, help="Output HTML instead of PDF")
 @click.option("--preview", is_flag=True, help="Render from existing JSON, no LLM")
 @click.option("--print-prompt", "print_prompt", is_flag=True, help="Print formatted LLM prompt (system + user)")
+@click.option("--save-prompt", "save_prompt", is_flag=False, flag_value="__auto__", default=None, metavar="PATH", help="Save LLM prompt to file and exit; PATH optional (.md or .json, default: $JOBFIT_DATA_DIR/../prompts/)")
 @role_option
-def cmd_cv_anschreiben(refnr: str, output: str | None, open_after: bool, html: bool, preview: bool, print_prompt: bool, role: str) -> None:
+def cmd_cv_anschreiben(refnr: str, output: str | None, open_after: bool, html: bool, preview: bool, print_prompt: bool, save_prompt: str | None, role: str) -> None:
     from jobfit.anschreiben import generator as anschreiben_generator
-    generate_doc(anschreiben_generator, refnr, output, open_after, html, preview, print_prompt, ROLES[role])
+    generate_doc(anschreiben_generator, refnr, output, open_after, html, preview, print_prompt, ROLES[role], save_prompt)
 
 
 @cli.command(name="enrich")

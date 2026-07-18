@@ -4,8 +4,9 @@ set -e
 alembic upgrade head
 
 # Auto-migrate SQLite data on first boot; sentinel prevents re-running
-if [ -f "data/jobfit.db" ] && [ ! -f "data/.pg_migrated" ]; then
-    python scripts/migrate_postgres.py && touch data/.pg_migrated
+DATA_DIR="${JOBFIT_DATA_DIR:-/secrets/jobfit/data}"
+if [ -f "${DATA_DIR}/jobfit.db" ] && [ ! -f "${DATA_DIR}/.pg_migrated" ]; then
+    python scripts/migrate_postgres.py && touch "${DATA_DIR}/.pg_migrated"
 fi
 
 # Allow one-off CLI commands: docker compose run --rm app jobfit fetch all

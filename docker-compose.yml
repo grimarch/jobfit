@@ -39,8 +39,7 @@ services:
     ports:
       - "8888:8888"
     env_file:
-      - path: .env
-        required: false
+      - path: ${JOBFIT_HOME}/.env
     depends_on:
       db:
         condition: service_healthy
@@ -49,9 +48,16 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-jobfit}:${POSTGRES_PASSWORD:-jobfit}@db:5432/${POSTGRES_DB:-jobfit}
       EVERJOBS_URL: http://everjobs:3001
       APP_HOST_PORT: "8888"
+      JOBFIT_REPORTS_DIR: /app/dashboards
+      JOBFIT_DATA_DIR: /secrets/jobfit/data
+      JOBFIT_JOBS_DATA_DIR: /secrets/jobfit/data/jobs
+      JOBFIT_USER_DATA_DIR: /secrets/jobfit/data/user
     volumes:
-      - ./data:/app/data
+      - ${JOBFIT_HOME}/data:/secrets/jobfit/data
+      - ${JOBFIT_JOBS_DATA_DIR}:/secrets/jobfit/data/jobs
+      - ${JOBFIT_USER_DATA_DIR}:/secrets/jobfit/data/user
       - ./logs:/app/logs
+      - ./prompts:/app/prompts
 
 volumes:
   postgres_data:

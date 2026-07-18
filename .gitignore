@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+.envrc
 
 # Virtual environments
 .venv/
@@ -69,3 +70,5 @@ data/*.db
 data/.pg_migrated
 /dashboards/
 /reports/
+.migration/
+prompts/

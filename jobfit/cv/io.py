@@ -36,8 +36,8 @@ def cv_file(role_slug: str = DEFAULT_ROLE) -> Path:
         if path.exists():
             return path
     raise FileNotFoundError(
-        f"No CV found: expected data/{role_slug}/input/CV_{role_slug}.md/.txt/.pdf "
-        f"or data/{role_slug}/input/CV.md/.txt/.pdf"
+        f"No CV found: expected {input_dir}/CV_{role_slug}.md/.txt/.pdf "
+        f"or {input_dir}/CV.md/.txt/.pdf"
     )
 
 
