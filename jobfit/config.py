@@ -9,8 +9,8 @@ from jobfit.roles import DEFAULT_ROLE, ROLES
 # ── Paths ─────────────────────────────────────────────────────────────────────
 
 def default_data_dir() -> Path:
-    """Default data root: ~/Projects/secrets/jobfit/data (outside the repo)."""
-    return Path.home() / "Projects" / "secrets" / "jobfit" / "data"
+    """Default data root: ./data (relative to CWD). Override with JOBFIT_DATA_DIR."""
+    return Path("data")
 
 
 def _resolve_data_dir() -> Path:
@@ -22,7 +22,19 @@ def _resolve_data_dir() -> Path:
 
 
 DATA_DIR = _resolve_data_dir()
-RAW_DIR = DATA_DIR / "raw"
+
+
+def _resolve_subdir(env_var: str, default: Path) -> Path:
+    raw = os.environ.get(env_var, "").strip()
+    path = Path(raw).expanduser() if raw else default
+    if not path.is_absolute():
+        path = Path.cwd() / path
+    return path
+
+
+JOBS_DATA_DIR = _resolve_subdir("JOBFIT_JOBS_DATA_DIR", DATA_DIR / "jobs")
+USER_DATA_DIR = _resolve_subdir("JOBFIT_USER_DATA_DIR", DATA_DIR / "user")
+RAW_DIR = JOBS_DATA_DIR / "raw"
 
 
 def _resolve_reports_dir() -> Path:
@@ -66,27 +78,27 @@ def log_reports_dir() -> None:
 
 
 def ensure_raw_dir() -> None:
-    """Create data/raw/ if missing (gitignored, may not exist on fresh clone)."""
+    """Create data/jobs/raw/ if missing (gitignored, may not exist on fresh clone)."""
     RAW_DIR.mkdir(parents=True, exist_ok=True)
 
 
-SOFTGARDEN_COMPANIES_FILE = DATA_DIR / "softgarden_companies.csv"
+SOFTGARDEN_COMPANIES_FILE = JOBS_DATA_DIR / "softgarden_companies.csv"
 
 
 def role_input_dir(role_slug: str = DEFAULT_ROLE) -> Path:
     """User-provided artifacts for a role: CV source, photo, prompts.
 
-    Future multi-user layout: DATA_DIR / user_id / role_slug / "input".
+    Future multi-user layout: DATA_DIR / "user" / user_id / role_slug / "input".
     """
-    return DATA_DIR / role_slug / "input"
+    return USER_DATA_DIR / role_slug / "input"
 
 
 def role_output_dir(role_slug: str = DEFAULT_ROLE) -> Path:
     """Generated artifacts for a role: cv_profile.json, tailored CVs.
 
-    Future multi-user layout: DATA_DIR / user_id / role_slug / "output".
+    Future multi-user layout: DATA_DIR / "user" / user_id / role_slug / "output".
     """
-    return DATA_DIR / role_slug / "output"
+    return USER_DATA_DIR / role_slug / "output"
 
 
 # ── Job fetching ───────────────────────────────────────────────────────────────

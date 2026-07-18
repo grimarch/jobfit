@@ -71,3 +71,4 @@ data/.pg_migrated
 /dashboards/
 /reports/
 .migration/
+prompts/

@@ -169,10 +169,10 @@ Bundled fetchers today are Germany-heavy; the pipeline itself is source-agnostic
 1. **Configure environment:**
 ```bash
 cp .env.example .env          # set LLM_API_KEY and POSTGRES_PASSWORD
-cp data/devops/input/CV_devops.md.example data/devops/input/CV_devops.md
-cp data/devops/input/brands_prompt.txt.example data/devops/input/brands_prompt.txt
-cp data/devops/input/scoring.yaml.example data/devops/input/scoring.yaml
-cp data/devops/input/anschreiben_profile.md.example data/devops/input/anschreiben_profile.md   # optional, used by `jobfit cv anschreiben`
+cp data/user/devops/input/CV_devops.md.example data/user/devops/input/CV_devops.md
+cp data/user/devops/input/brands_prompt.txt.example data/user/devops/input/brands_prompt.txt
+cp data/user/devops/input/scoring.yaml.example data/user/devops/input/scoring.yaml
+cp data/user/devops/input/anschreiben_profile.md.example data/user/devops/input/anschreiben_profile.md   # optional, used by `jobfit cv anschreiben`
 ```
 
 2. **Bootstrap data** (empty DB won't pass startup checks):
@@ -337,7 +337,7 @@ Multiple LLM setups (Anthropic, Gemini, OpenRouter, Ollama, split providers per 
 
 ### Dashboard scoring & tiers
 
-`data/{role}/input/scoring.yaml` (copied from `scoring.yaml.example`, gitignored like the CV) is the
+`data/user/{role}/input/scoring.yaml` (copied from `scoring.yaml.example`, gitignored like the CV) is the
 single file that drives both the Target Companies tiering and the CV Gap Analysis ranking — edit it
 to match your own priorities without touching code:
 
@@ -381,9 +381,9 @@ Covers fetchers, enrichment, CV/Anschreiben pipelines, API smoke tests, and star
 
 The core ships with a single role and a single market — everything below is how you (or future releases) grow coverage without rewriting the pipeline.
 
-- **New role** → `jobfit/roles/{slug}.yaml` (skills/practices/title_re, see `devops.yaml`) + a one-line `jobfit/roles/{slug}.py` loader + register in `__init__.py` + `data/{slug}/input/CV_{slug}.md` + `data/{slug}/input/brands_prompt.txt` (see the `.example` files under `data/devops/input/` as a starting point)
+- **New role** → `jobfit/roles/{slug}.yaml` (skills/practices/title_re, see `devops.yaml`) + a one-line `jobfit/roles/{slug}.py` loader + register in `__init__.py` + `data/user/{slug}/input/CV_{slug}.md` + `data/user/{slug}/input/brands_prompt.txt` (see the `.example` files under `data/user/devops/input/` as a starting point)
 - **New market / data source** → implement `run(args)` in `jobfit/fetchers/`, register in `fetchers/__init__.py`
-- **New Softgarden company** → append to `data/softgarden_companies.csv`, then `jobfit fetch softgarden`
+- **New Softgarden company** → append to `data/jobs/softgarden_companies.csv`, then `jobfit fetch softgarden`
 
 Examples throughout this README use `--role devops` — that's the only bundled role today. Swap the slug once your module is in place.
 
