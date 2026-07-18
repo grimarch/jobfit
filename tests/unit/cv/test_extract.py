@@ -163,7 +163,7 @@ def test_load_cv_profile_prefers_json(tmp_path: Path, monkeypatch: pytest.Monkey
     json_path.parent.mkdir(parents=True)
     json_path.write_text(json.dumps({"german_level": "C1", "experience_years": 7}))
 
-    monkeypatch.setattr(config, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(config, "USER_DATA_DIR", tmp_path)
 
     profile = load_cv_profile("devops")
     assert profile["german_level"] == "C1"
@@ -185,7 +185,7 @@ def test_load_cv_profile_fallback_to_frontmatter(
         John Doe DevOps Engineer
     """))
 
-    monkeypatch.setattr(config, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(config, "USER_DATA_DIR", tmp_path)
 
     profile = load_cv_profile("devops")
 
@@ -198,7 +198,7 @@ def test_load_cv_profile_missing_returns_empty(
 ) -> None:
     from jobfit import config
 
-    monkeypatch.setattr(config, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(config, "USER_DATA_DIR", tmp_path)
 
     with monkeypatch.context() as m:
         m.chdir(tmp_path)
@@ -257,7 +257,7 @@ def test_load_cv_contact_all_from_frontmatter(
 ) -> None:
     from jobfit import config
     _write_cv(tmp_path, _CV_FULL_FRONTMATTER)
-    monkeypatch.setattr(config, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(config, "USER_DATA_DIR", tmp_path)
     result = load_cv_contact("devops")
     assert result["email"] == "john@example.com"
     assert result["city"] == "Berlin"
@@ -272,7 +272,7 @@ def test_load_cv_contact_regex_fallback(
 ) -> None:
     from jobfit import config
     _write_cv(tmp_path, _CV_NO_CONTACT_FRONTMATTER)
-    monkeypatch.setattr(config, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(config, "USER_DATA_DIR", tmp_path)
     result = load_cv_contact("devops")
     assert result["email"] == "john@example.com"
     assert result["city"] == "Berlin"
@@ -286,7 +286,7 @@ def test_load_cv_contact_partial_frontmatter_fills_gaps(
 ) -> None:
     from jobfit import config
     _write_cv(tmp_path, _CV_PARTIAL_FRONTMATTER)
-    monkeypatch.setattr(config, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(config, "USER_DATA_DIR", tmp_path)
     result = load_cv_contact("devops")
     assert result["email"] == "john@example.com"   # frontmatter
     assert result["city"] == "Berlin"              # frontmatter
@@ -298,7 +298,7 @@ def test_load_cv_contact_missing_file_returns_all_none(
 ) -> None:
     from jobfit import config
 
-    monkeypatch.setattr(config, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(config, "USER_DATA_DIR", tmp_path)
     with monkeypatch.context() as m:
         m.chdir(tmp_path)
         result = load_cv_contact("devops")

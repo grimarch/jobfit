@@ -1,1 +1,16 @@
-export JOBFIT_SECRETS_DIR="/path/to/secrets/jobfit"
+# direnv config — loaded automatically in the shell (https://direnv.net)
+# Serves two purposes:
+#   1. Local Python runs — these vars are read directly by the app
+#   2. Docker Compose — substituted in docker-compose.yml for env_file path and volume mounts
+
+# Root of your secrets directory. Docker Compose reads ${JOBFIT_HOME}/.env from here.
+export JOBFIT_HOME="/path/to/secrets/jobfit"
+
+# Base data directory. Defaults to ./data (CWD-relative) if unset.
+export JOBFIT_DATA_DIR="$JOBFIT_HOME/data"
+
+# Job listings data (ATS caches, raw feeds). Controls the volume mount source in Docker.
+export JOBFIT_JOBS_DATA_DIR="$JOBFIT_HOME/data/jobs"
+
+# Personal user data (CV, scoring.yaml, photos). Controls the volume mount source in Docker.
+export JOBFIT_USER_DATA_DIR="$JOBFIT_HOME/data/user"
