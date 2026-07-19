@@ -1,0 +1,165 @@
+"""Integration tests for prep_context export.
+
+Calls the real export logic against the test database.
+No LLM calls happen — only DB queries and local file I/O.
+"""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+import pytest
+
+_ROLE = "devops"
+
+_FIXTURE_CV = """\
+# CV — Test fixture
+
+## Experience
+- DevOps Engineer at Acme Corp (2020–present)
+  - Built Kubernetes clusters on AWS
+  - Infrastructure as code with Terraform
+  - CI/CD with GitHub Actions
+
+## Skills
+Docker, Kubernetes, Terraform, AWS, Ansible, Helm, Prometheus
+"""
+
+
+def _get_starred_refnr(role: str = _ROLE) -> str | None:
+    """Return the first starred refnr for *role* from the DB, or None."""
+    from jobfit.db import get_session
+    from jobfit.db.models import Classification as ClsModel
+
+    with get_session() as session:
+        row = (
+            session.query(ClsModel.refnr)
+            .filter(
+                ClsModel.role == role,
+                ClsModel.starred_at.isnot(None),
+            )
+            .first()
+        )
+    return row[0] if row else None
+
+
+# ── Fixtures ──────────────────────────────────────────────────────────────────
+
+
+@pytest.fixture()
+def cv_file(tmp_path: Path) -> Path:
+    p = tmp_path / "cv_fixture.md"
+    p.write_text(_FIXTURE_CV, encoding="utf-8")
+    return p
+
+
+@pytest.fixture()
+def out_md(tmp_path: Path) -> Path:
+    return tmp_path / "prep_context.md"
+
+
+# ── Tests ─────────────────────────────────────────────────────────────────────
+
+
+def test_export_writes_md_only(cv_file: Path, out_md: Path) -> None:
+    """Export creates exactly one .md file and no .json file next to it."""
+    from jobfit.prep_context import export as prep_export
+
+    prep_export.run(
+        role_slug=_ROLE,
+        cv_path=cv_file,
+        out_path=out_md,
+        jd_excerpt_chars=200,
+        market_scope="sm",
+        include_closed=True,
+        dry_run=False,
+    )
+
+    assert out_md.exists(), "Output .md file was not created"
+    json_path = out_md.with_suffix(".json")
+    assert not json_path.exists(), f"Unexpected .json file created at {json_path}"
+
+
+def test_export_md_contains_refnr_for_starred(cv_file: Path, out_md: Path) -> None:
+    """Each starred block in the output md has a - refnr: line matching a DB starred job."""
+    starred_refnr = _get_starred_refnr()
+    if starred_refnr is None:
+        pytest.skip("No starred jobs for role 'devops' in test DB")
+
+    from jobfit.prep_context import export as prep_export
+
+    prep_export.run(
+        role_slug=_ROLE,
+        cv_path=cv_file,
+        out_path=out_md,
+        jd_excerpt_chars=200,
+        market_scope="sm",
+        include_closed=True,
+        dry_run=False,
+    )
+
+    content = out_md.read_text(encoding="utf-8")
+    refnr_values = re.findall(r"^- refnr:\s*(.+)$", content, re.MULTILINE)
+    assert len(refnr_values) > 0, "No '- refnr:' lines found in output md"
+    assert starred_refnr in refnr_values, (
+        f"DB starred refnr {starred_refnr!r} not found in output refnrs: {refnr_values}"
+    )
+
+
+def test_export_md_has_empty_human_slots(cv_file: Path, out_md: Path) -> None:
+    """prep_label: and why_starred: are present as empty slots for human editing."""
+    starred_refnr = _get_starred_refnr()
+    if starred_refnr is None:
+        pytest.skip("No starred jobs for role 'devops' in test DB")
+
+    from jobfit.prep_context import export as prep_export
+
+    prep_export.run(
+        role_slug=_ROLE,
+        cv_path=cv_file,
+        out_path=out_md,
+        jd_excerpt_chars=200,
+        market_scope="sm",
+        include_closed=True,
+        dry_run=False,
+    )
+
+    content = out_md.read_text(encoding="utf-8")
+    assert "- prep_label: " in content, "Missing empty '- prep_label:' slot"
+    assert "- why_starred: " in content, "Missing empty '- why_starred:' slot"
+
+
+def test_export_md_has_how_to_use_section(cv_file: Path, out_md: Path) -> None:
+    """Output md ends with a ## How to use section."""
+    from jobfit.prep_context import export as prep_export
+
+    prep_export.run(
+        role_slug=_ROLE,
+        cv_path=cv_file,
+        out_path=out_md,
+        jd_excerpt_chars=200,
+        market_scope="sm",
+        include_closed=True,
+        dry_run=False,
+    )
+
+    content = out_md.read_text(encoding="utf-8")
+    assert "## How to use" in content, "Missing '## How to use' section in output md"
+
+
+def test_export_dry_run_writes_nothing(cv_file: Path, out_md: Path) -> None:
+    """--dry-run prints a summary but creates no output file."""
+    from jobfit.prep_context import export as prep_export
+
+    prep_export.run(
+        role_slug=_ROLE,
+        cv_path=cv_file,
+        out_path=out_md,
+        jd_excerpt_chars=200,
+        market_scope="sm",
+        include_closed=True,
+        dry_run=True,
+    )
+
+    assert not out_md.exists(), "--dry-run must not write any file"
