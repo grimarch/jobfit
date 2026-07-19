@@ -75,6 +75,7 @@ It pulls listings from public APIs and ATS feeds, normalizes them into PostgreSQ
 - **CV generate** — LLM-tailored resume per vacancy, rendered to PDF
 - **Anschreiben** — DIN 5008 cover letters, tone adapted to company stage (startup / Mittelstand / enterprise)
 - **PII anonymization** — personal data stripped before LLM calls, restored locally after generation
+- **Prep context export** — `jobfit prep-context export` writes an anonymized Markdown brief of starred jobs (preferences, market gaps, overlap vs CV). Field glossary is embedded in the file (`## Field reference`); human notes in `prep_label` / `why_starred` survive re-export via merge on `refnr`
 
 ### Platform
 - **CLI + Web API** — same logic via `jobfit` commands or FastAPI endpoints

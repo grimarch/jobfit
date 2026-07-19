@@ -1,8 +1,52 @@
-"""Render prep context data to Markdown and/or JSON."""
+"""Render prep context data to Markdown."""
 
 from __future__ import annotations
 
 from typing import Any
+
+_HOW_TO_USE = """\
+## How to use
+- Fill in `why_starred` and `prep_label` for each job (human fields).
+- Do not edit `prep_heuristic` or `agency_suspect` — recalculated on every export.
+- Re-export merges `why_starred` / `prep_label` by `refnr` unless `--no-merge`.
+- `prep_context_demo.md` is a demo file only, not a source of truth."""
+
+_FIELD_REFERENCE = """\
+## Field reference
+
+### Header
+- **CV source** — path used for skill overlap (prefer `prompts/CV.md` for interview truth).
+- **Market scope** — product jobs in the chosen stage group. Default CLI `--market-scope sm` means \
+**Startup + Mittelstand** (both stages). Other values: `startup`, `mittelstand`, `enterprise`.
+- **As of** — latest classification `enriched_at` among exported starred rows (or export date).
+
+### Preferences / Market snapshot
+- Copied from live scoring config and product-market skill frequencies vs the CV skill set.
+- **Top strengths** — skills common in the market that also appear in the CV.
+- **Top gaps** — skills common in the market that do not appear in the CV.
+
+### Starred job fields
+- **S1, S2, …** — display ids; order is `starred_at` descending (newest star first).
+- **refnr** — stable JobFit job id; used to merge human fields on re-export. Machine-written.
+- **company_type / stage / industry** — from classification.
+- **work_mode / on_call / german_level / english_ok** — from enrichment.
+- **tier / score** — target-company scoring (`dreamjob`, `cvbuilder`, `easywin`, `skip`), not prep fitness.
+- **must_have_skills** — skills detected in the JD via the role taxonomy.
+- **overlap_with_cv / gaps_vs_cv** — JD skills ∩ / − CV skills (from CV text, not `cv_profile.json`).
+- **prep_heuristic** — machine prep-fitness label (advisory). Values:
+  - `fit` — product, overlap ≥ 50%, stage startup/mittelstand, no stretch ceiling applied
+  - `stretch` — product with weaker fit, or a ceiling demoted `fit` (see below)
+  - `brand-only` — product with low overlap (< 25%) or known-brand `cvbuilder` tier
+  - `skip-for-prep` — not product, or title matches junior/intern exclude regex
+- **Stretch ceilings** (can only demote `fit` → `stretch`): onsite with negative weight; \
+industry not in preferred (after normalize); on-call with penalty; `agency_suspect`.
+- **agency_suspect** — JD matched recruitment/staffing keyword patterns (`true`/`false`).
+- **prep_label** — **your** prep verdict: `fit` | `stretch` | `brand-only` | `skip-for-prep` (leave empty until decided).
+- **why_starred** — **your** reason for starring (free text).
+- **jd_excerpt** — truncated JD with company name / URLs / emails redacted where possible.
+
+### What to edit
+Only `prep_label` and `why_starred`. Everything else is regenerated on export."""
 
 
 def _yn(val: Any) -> str:
@@ -127,8 +171,7 @@ def render_md(data: dict[str, Any]) -> str:
     for i, job in enumerate(data["starred"], start=1):
         parts.append(render_job_md(job, i))
         parts.append("")
-    parts.append("## How to use")
-    parts.append("- Fill in `why_starred` and `prep_label` for each job.")
-    parts.append("- Do not edit `prep_heuristic` — it is recalculated on every export.")
-    parts.append("- `prep_context_demo.md` is a demo file only, not a source of truth.")
+    parts.append(_HOW_TO_USE)
+    parts.append("")
+    parts.append(_FIELD_REFERENCE)
     return "\n".join(parts)

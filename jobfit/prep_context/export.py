@@ -119,8 +119,9 @@ def _build_job_record(
     heuristic = prep_heuristic(meta, job_tier, overlap, job_skills, config, agency_suspect=agency)
     excerpt = redact_excerpt(
         jd_text,
-        cls_row.firma or job_row.firma or "",
+        cls_row.firma or "",
         jd_excerpt_chars,
+        job_row.firma or "",
     )
 
     return {

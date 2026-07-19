@@ -142,6 +142,23 @@ def test_md_how_to_use_warns_about_prep_heuristic():
     assert "prep_heuristic" in out[out.index("## How to use"):]
 
 
+def test_md_has_field_reference_section():
+    out = render_md(_DATA)
+    assert "## Field reference" in out
+    ref = out[out.index("## Field reference"):]
+    assert "Startup + Mittelstand" in ref
+    assert "`fit`" in ref and "`stretch`" in ref
+    assert "`brand-only`" in ref and "`skip-for-prep`" in ref
+    assert "prep_label" in ref and "why_starred" in ref
+    assert "agency_suspect" in ref
+    assert "tier / score" in ref or "**tier / score**" in ref
+
+
+def test_md_field_reference_after_how_to_use():
+    out = render_md(_DATA)
+    assert out.index("## How to use") < out.index("## Field reference")
+
+
 def test_md_starred_section_contains_refnr():
     out = render_md(_DATA)
     assert "- refnr: REF-12345" in out
