@@ -96,8 +96,11 @@ def render_job_md(job: dict[str, Any], idx: int) -> str:
     gaps = job.get("gaps_vs_cv") or []
     lines.append(f"- gaps_vs_cv: [{', '.join(gaps)}]")
     lines.append(f"- prep_heuristic: {job.get('prep_heuristic') or '-'}")
-    lines.append("- prep_label: ")
-    lines.append("- why_starred: ")
+    agency = job.get("agency_suspect")
+    if agency is not None:
+        lines.append(f"- agency_suspect: {str(agency).lower()}")
+    lines.append(f"- prep_label: {job.get('prep_label') or ''}")
+    lines.append(f"- why_starred: {job.get('why_starred') or ''}")
     excerpt = job.get("jd_excerpt") or ""
     if excerpt:
         lines.append(f"- jd_excerpt: {excerpt}")

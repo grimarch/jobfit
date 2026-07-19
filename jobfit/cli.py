@@ -203,6 +203,12 @@ def prep_context_group() -> None:
     is_flag=True,
     help="Print summary counts; write nothing.",
 )
+@click.option(
+    "--no-merge",
+    "no_merge",
+    is_flag=True,
+    help="Overwrite --out without merging existing why_starred / prep_label values.",
+)
 def cmd_prep_context_export(
     role: str,
     cv_path: str | None,
@@ -211,12 +217,16 @@ def cmd_prep_context_export(
     market_scope: str,
     include_closed: bool,
     dry_run: bool,
+    no_merge: bool,
 ) -> None:
     """Export an anonymized Markdown prep context for interview preparation.
 
     Starred jobs are ordered by starred_at descending (S1 = most recently starred).
     Company names are replaced with S1/S2/... identifiers; JD excerpts have firm
     names, URLs, and emails scrubbed.
+
+    If --out already exists, human-edited why_starred and prep_label values are
+    merged back by refnr. Use --no-merge to skip this and overwrite from scratch.
     """
     from pathlib import Path
     from jobfit.prep_context import export as prep_export
@@ -229,4 +239,5 @@ def cmd_prep_context_export(
         market_scope=market_scope,
         include_closed=include_closed,
         dry_run=dry_run,
+        no_merge=no_merge,
     )

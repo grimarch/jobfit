@@ -148,6 +148,95 @@ def test_export_md_has_how_to_use_section(cv_file: Path, out_md: Path) -> None:
     assert "## How to use" in content, "Missing '## How to use' section in output md"
 
 
+def test_export_merge_preserves_human_fields(cv_file: Path, out_md: Path) -> None:
+    """Re-export with merge restores why_starred and prep_label from the previous run."""
+    starred_refnr = _get_starred_refnr()
+    if starred_refnr is None:
+        pytest.skip("No starred jobs for role 'devops' in test DB")
+
+    from jobfit.prep_context import export as prep_export
+
+    # First export — write empty slots.
+    prep_export.run(
+        role_slug=_ROLE,
+        cv_path=cv_file,
+        out_path=out_md,
+        jd_excerpt_chars=200,
+        market_scope="sm",
+        include_closed=True,
+        dry_run=False,
+    )
+
+    # Simulate human edits by patching the file directly.
+    content = out_md.read_text(encoding="utf-8")
+    content = content.replace(
+        f"- refnr: {starred_refnr}\n- title:",
+        f"- refnr: {starred_refnr}\n- title:",
+        1,
+    )
+    # Inject human values into the block for starred_refnr.
+    content = re.sub(
+        r"(- refnr: " + re.escape(starred_refnr) + r".*?- prep_label:)\s*\n(- why_starred:)\s*",
+        r"\1 stretch\n\2 chosen for brand value\n",
+        content,
+        count=1,
+        flags=re.DOTALL,
+    )
+    out_md.write_text(content, encoding="utf-8")
+
+    # Second export — merge should restore the human-edited values.
+    prep_export.run(
+        role_slug=_ROLE,
+        cv_path=cv_file,
+        out_path=out_md,
+        jd_excerpt_chars=200,
+        market_scope="sm",
+        include_closed=True,
+        dry_run=False,
+    )
+
+    merged = out_md.read_text(encoding="utf-8")
+    assert "- prep_label: stretch" in merged, "prep_label not preserved after merge"
+    assert "- why_starred: chosen for brand value" in merged, "why_starred not preserved after merge"
+
+
+def test_export_no_merge_discards_human_fields(cv_file: Path, out_md: Path) -> None:
+    """--no-merge overwrites without restoring human-edited fields."""
+    starred_refnr = _get_starred_refnr()
+    if starred_refnr is None:
+        pytest.skip("No starred jobs for role 'devops' in test DB")
+
+    from jobfit.prep_context import export as prep_export
+
+    prep_export.run(
+        role_slug=_ROLE,
+        cv_path=cv_file,
+        out_path=out_md,
+        jd_excerpt_chars=200,
+        market_scope="sm",
+        include_closed=True,
+        dry_run=False,
+    )
+
+    content = out_md.read_text(encoding="utf-8")
+    content = re.sub(r"- prep_label:\s*\n", "- prep_label: fit\n", content, count=1)
+    out_md.write_text(content, encoding="utf-8")
+
+    prep_export.run(
+        role_slug=_ROLE,
+        cv_path=cv_file,
+        out_path=out_md,
+        jd_excerpt_chars=200,
+        market_scope="sm",
+        include_closed=True,
+        dry_run=False,
+        no_merge=True,
+    )
+
+    fresh = out_md.read_text(encoding="utf-8")
+    assert "- prep_label: fit" not in fresh, "no_merge must discard old prep_label"
+
+
 def test_export_dry_run_writes_nothing(cv_file: Path, out_md: Path) -> None:
     """--dry-run prints a summary but creates no output file."""
     from jobfit.prep_context import export as prep_export

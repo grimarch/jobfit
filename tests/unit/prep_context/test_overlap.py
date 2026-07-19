@@ -2,7 +2,12 @@
 
 import pytest
 
-from jobfit.prep_context.overlap import compute_cv_skills, compute_job_overlap, prep_heuristic
+from jobfit.prep_context.overlap import (
+    compute_cv_skills,
+    compute_job_overlap,
+    detect_agency_suspect,
+    prep_heuristic,
+)
 from tests.conftest import make_meta, make_scoring_config
 
 _ROLE_SKILLS: list[tuple[str, str]] = [
@@ -86,7 +91,9 @@ def test_heuristic_cvbuilder_tier_is_brand_only():
 
 
 def test_heuristic_high_ratio_sm_is_fit():
-    meta = make_meta(company_type="product", company_stage="startup")
+    # industry must be in preferred_industries to avoid the industry ceiling.
+    # "Cybersecurity" normalizes to "Cybersecurity" which is in the test config.
+    meta = make_meta(company_type="product", company_stage="startup", industry="Cybersecurity")
     job_skills = frozenset({"Docker", "Kubernetes"})
     overlap = ["Docker", "Kubernetes"]  # 100% ratio
     assert prep_heuristic(meta, "dreamjob", overlap, job_skills, _CONFIG) == "fit"
@@ -117,3 +124,106 @@ def test_heuristic_low_ratio_is_brand_only():
 def test_heuristic_no_job_skills_zero_ratio_brand_only():
     meta = make_meta(company_type="product", company_stage="startup")
     assert prep_heuristic(meta, "easywin", [], frozenset(), _CONFIG) == "brand-only"
+
+
+# ── prep_heuristic: v2 ceiling rules ─────────────────────────────────────────
+# Helpers — a "would-be fit" baseline: startup, preferred industry, high ratio.
+_FIT_SKILLS = frozenset({"Docker", "Kubernetes"})
+_FIT_OVERLAP = ["Docker", "Kubernetes"]
+_FIT_META_BASE = dict(
+    company_type="product",
+    company_stage="startup",
+    industry="Cybersecurity",  # in preferred_industries
+    work_mode="remote",
+    on_call=False,
+)
+
+
+def test_heuristic_onsite_with_penalty_caps_at_stretch():
+    meta = make_meta(**{**_FIT_META_BASE, "work_mode": "onsite"})
+    # _CONFIG.work_mode_weights["onsite"] == -1 (negative penalty)
+    assert prep_heuristic(meta, "easywin", _FIT_OVERLAP, _FIT_SKILLS, _CONFIG) == "stretch"
+
+
+def test_heuristic_remote_no_onsite_ceiling():
+    meta = make_meta(**_FIT_META_BASE)  # work_mode="remote"
+    assert prep_heuristic(meta, "easywin", _FIT_OVERLAP, _FIT_SKILLS, _CONFIG) == "fit"
+
+
+def test_heuristic_non_preferred_industry_caps_at_stretch():
+    # "SaaS / Cloud" is not in preferred_industries → ceiling
+    meta = make_meta(**{**_FIT_META_BASE, "industry": "SaaS / Cloud"})
+    assert prep_heuristic(meta, "easywin", _FIT_OVERLAP, _FIT_SKILLS, _CONFIG) == "stretch"
+
+
+def test_heuristic_preferred_industry_no_ceiling():
+    meta = make_meta(**{**_FIT_META_BASE, "industry": "Cybersecurity"})
+    assert prep_heuristic(meta, "easywin", _FIT_OVERLAP, _FIT_SKILLS, _CONFIG) == "fit"
+
+
+def test_heuristic_on_call_with_penalty_caps_at_stretch():
+    meta = make_meta(**{**_FIT_META_BASE, "on_call": True})
+    # _CONFIG.on_call_penalty == -1 (negative)
+    assert prep_heuristic(meta, "easywin", _FIT_OVERLAP, _FIT_SKILLS, _CONFIG) == "stretch"
+
+
+def test_heuristic_no_on_call_no_ceiling():
+    meta = make_meta(**{**_FIT_META_BASE, "on_call": False})
+    assert prep_heuristic(meta, "easywin", _FIT_OVERLAP, _FIT_SKILLS, _CONFIG) == "fit"
+
+
+def test_heuristic_agency_suspect_caps_at_stretch():
+    meta = make_meta(**_FIT_META_BASE)
+    assert prep_heuristic(
+        meta, "easywin", _FIT_OVERLAP, _FIT_SKILLS, _CONFIG, agency_suspect=True
+    ) == "stretch"
+
+
+def test_heuristic_no_agency_no_ceiling():
+    meta = make_meta(**_FIT_META_BASE)
+    assert prep_heuristic(
+        meta, "easywin", _FIT_OVERLAP, _FIT_SKILLS, _CONFIG, agency_suspect=False
+    ) == "fit"
+
+
+def test_heuristic_ceiling_does_not_raise_brand_only():
+    # Ceilings only demote fit→stretch, never raise brand-only
+    meta = make_meta(**{**_FIT_META_BASE, "industry": "Cybersecurity"})
+    job_skills = frozenset({"Docker", "Kubernetes", "Terraform", "AWS", "Ansible"})
+    overlap: list[str] = []  # 0% → brand-only base
+    result = prep_heuristic(meta, "easywin", overlap, job_skills, _CONFIG)
+    assert result == "brand-only"
+
+
+# ── detect_agency_suspect ─────────────────────────────────────────────────────
+
+def test_agency_suspect_staffing_agency():
+    assert detect_agency_suspect("We are a staffing agency specializing in DevOps talent.")
+
+
+def test_agency_suspect_recruitment_agency():
+    assert detect_agency_suspect("Our recruitment agency places engineers at top firms.")
+
+
+def test_agency_suspect_our_clients_include():
+    assert detect_agency_suspect("Our clients include startups and digital agencies.")
+
+
+def test_agency_suspect_we_recruit():
+    assert detect_agency_suspect("We recruit on behalf of leading tech companies.")
+
+
+def test_agency_suspect_personalvermittlung():
+    assert detect_agency_suspect("Wir sind eine Personalvermittlung für IT-Fachkräfte.")
+
+
+def test_agency_suspect_false_for_direct_employer():
+    jd = (
+        "We are building the next generation of cloud infrastructure. "
+        "Join our platform team to own Kubernetes deployments end-to-end."
+    )
+    assert not detect_agency_suspect(jd)
+
+
+def test_agency_suspect_case_insensitive():
+    assert detect_agency_suspect("STAFFING AGENCY with global reach.")

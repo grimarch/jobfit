@@ -10,7 +10,13 @@ from loguru import logger
 
 from jobfit.dashboards.scoring import score as compute_score, tier as compute_tier, norm_firma
 from jobfit.prep_context.market import build_market_snapshot
-from jobfit.prep_context.overlap import compute_cv_skills, compute_job_overlap, prep_heuristic
+from jobfit.prep_context.merge import parse_human_fields
+from jobfit.prep_context.overlap import (
+    compute_cv_skills,
+    compute_job_overlap,
+    detect_agency_suspect,
+    prep_heuristic,
+)
 from jobfit.prep_context.redact import redact_excerpt
 from jobfit.prep_context.render import render_md
 from jobfit.roles import ROLES
@@ -104,13 +110,15 @@ def _build_job_record(
 ) -> dict[str, Any]:
     from jobfit.db import cls_to_meta
 
+    jd_text = job_row.beschreibung or ""
     meta = cls_to_meta(cls_row)
     job_score = compute_score(meta, config)
-    job_skills, overlap, gaps = compute_job_overlap(cv_skills, job_row.beschreibung or "", role)
+    job_skills, overlap, gaps = compute_job_overlap(cv_skills, jd_text, role)
     job_tier = compute_tier(job_score, meta, known_brands, job_skills, cv_skills, config)
-    heuristic = prep_heuristic(meta, job_tier, overlap, job_skills, config)
+    agency = detect_agency_suspect(jd_text)
+    heuristic = prep_heuristic(meta, job_tier, overlap, job_skills, config, agency_suspect=agency)
     excerpt = redact_excerpt(
-        job_row.beschreibung or "",
+        jd_text,
         cls_row.firma or job_row.firma or "",
         jd_excerpt_chars,
     )
@@ -136,6 +144,8 @@ def _build_job_record(
         "overlap_with_cv": overlap,
         "gaps_vs_cv": gaps,
         "prep_heuristic": heuristic,
+        "agency_suspect": agency,
+        "prep_label": "",
         "why_starred": "",
         "jd_excerpt": excerpt,
     }
@@ -149,6 +159,7 @@ def run(
     market_scope: str,
     include_closed: bool,
     dry_run: bool,
+    no_merge: bool = False,
 ) -> None:
     """Build and write the anonymized Markdown prep context file.
 
@@ -160,11 +171,18 @@ def run(
         market_scope:     VIEW_CONFIGS key: "sm", "startup", "mittelstand", "enterprise".
         include_closed:   Include starred jobs whose closed_at is set.
         dry_run:          Print summary counts without writing files.
+        no_merge:         If True, ignore existing out_path even if it exists.
     """
     role = ROLES[role_slug]
     config = load_scoring_config(role_slug)
     cv_text, cv_source = _load_cv_text(cv_path, role_slug)
     cv_skills = compute_cv_skills(cv_text, role)
+
+    # Load human-edited fields from existing file before overwriting.
+    human_fields: dict[str, dict[str, str]] = {}
+    if not no_merge and out_path.exists():
+        human_fields = parse_human_fields(out_path.read_text(encoding="utf-8"))
+        logger.info("prep-context: merging human fields from {}, {} entries", out_path, len(human_fields))
 
     rows = _query_starred(role_slug, include_closed)
     known_brands = _load_known_brands(role_slug)
@@ -176,6 +194,10 @@ def run(
             cls_row, job_row, idx, cv_skills, role_slug,
             known_brands, config, role, jd_excerpt_chars,
         )
+        if cls_row.refnr in human_fields:
+            saved = human_fields[cls_row.refnr]
+            record["why_starred"] = saved.get("why_starred", "")
+            record["prep_label"] = saved.get("prep_label", "")
         starred_records.append(record)
 
     now_utc = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")

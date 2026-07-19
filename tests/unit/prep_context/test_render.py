@@ -29,6 +29,8 @@ _JOB: dict = {
     "overlap_with_cv": ["Docker"],
     "gaps_vs_cv": ["Kubernetes"],
     "prep_heuristic": "fit",
+    "agency_suspect": False,
+    "prep_label": "",
     "why_starred": "",
     "jd_excerpt": "We build cloud infrastructure at scale.",
 }
@@ -149,3 +151,38 @@ def test_md_no_json_render_function():
     assert not hasattr(render_mod, "render_json"), (
         "render_json must be removed — only Markdown output is supported"
     )
+
+
+# ── agency_suspect field ──────────────────────────────────────────────────────
+
+def test_job_md_has_agency_suspect_false():
+    out = render_job_md({**_JOB, "agency_suspect": False}, 1)
+    assert "- agency_suspect: false" in out
+
+
+def test_job_md_has_agency_suspect_true():
+    out = render_job_md({**_JOB, "agency_suspect": True}, 1)
+    assert "- agency_suspect: true" in out
+
+
+def test_job_md_agency_suspect_omitted_when_none():
+    job = {k: v for k, v in _JOB.items() if k != "agency_suspect"}
+    out = render_job_md(job, 1)
+    assert "agency_suspect" not in out
+
+
+def test_job_md_agency_suspect_after_prep_heuristic():
+    out = render_job_md({**_JOB, "agency_suspect": True}, 1)
+    assert out.index("- prep_heuristic:") < out.index("- agency_suspect:")
+
+
+# ── prep_label merge round-trip ───────────────────────────────────────────────
+
+def test_job_md_prep_label_with_value():
+    out = render_job_md({**_JOB, "prep_label": "fit"}, 1)
+    assert "- prep_label: fit" in out
+
+
+def test_job_md_why_starred_with_value():
+    out = render_job_md({**_JOB, "why_starred": "great remote culture"}, 1)
+    assert "- why_starred: great remote culture" in out
