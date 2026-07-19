@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from typing import Any
 
 
@@ -65,6 +64,7 @@ def render_market_md(snapshot: dict[str, Any]) -> str:
 
 def render_job_md(job: dict[str, Any], idx: int) -> str:
     lines: list[str] = [f"### S{idx}"]
+    lines.append(f"- refnr: {job.get('refnr') or '-'}")
     lines.append(f"- title: {job.get('title') or '-'}")
     lines.append(
         f"- company_type / stage / industry: "
@@ -96,6 +96,7 @@ def render_job_md(job: dict[str, Any], idx: int) -> str:
     gaps = job.get("gaps_vs_cv") or []
     lines.append(f"- gaps_vs_cv: [{', '.join(gaps)}]")
     lines.append(f"- prep_heuristic: {job.get('prep_heuristic') or '-'}")
+    lines.append("- prep_label: ")
     lines.append("- why_starred: ")
     excerpt = job.get("jd_excerpt") or ""
     if excerpt:
@@ -123,8 +124,8 @@ def render_md(data: dict[str, Any]) -> str:
     for i, job in enumerate(data["starred"], start=1):
         parts.append(render_job_md(job, i))
         parts.append("")
+    parts.append("## How to use")
+    parts.append("- Fill in `why_starred` and `prep_label` for each job.")
+    parts.append("- Do not edit `prep_heuristic` — it is recalculated on every export.")
+    parts.append("- `prep_context_demo.md` is a demo file only, not a source of truth.")
     return "\n".join(parts)
-
-
-def render_json(data: dict[str, Any]) -> str:
-    return json.dumps(data, indent=2, ensure_ascii=False)

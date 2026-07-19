@@ -177,15 +177,7 @@ def prep_context_group() -> None:
     default="prompts/prep_context.md",
     metavar="PATH",
     show_default=True,
-    help="Output path (.md or .json determined by --format).",
-)
-@click.option(
-    "--format",
-    "fmt",
-    default="md",
-    type=click.Choice(["md", "json", "both"]),
-    show_default=True,
-    help="Output format.",
+    help="Output path for the Markdown file.",
 )
 @click.option(
     "--jd-excerpt-chars",
@@ -215,13 +207,12 @@ def cmd_prep_context_export(
     role: str,
     cv_path: str | None,
     out_path: str,
-    fmt: str,
     jd_excerpt_chars: int,
     market_scope: str,
     include_closed: bool,
     dry_run: bool,
 ) -> None:
-    """Export an anonymized Markdown (and/or JSON) prep context for interview preparation.
+    """Export an anonymized Markdown prep context for interview preparation.
 
     Starred jobs are ordered by starred_at descending (S1 = most recently starred).
     Company names are replaced with S1/S2/... identifiers; JD excerpts have firm
@@ -234,7 +225,6 @@ def cmd_prep_context_export(
         role_slug=role,
         cv_path=Path(cv_path) if cv_path else None,
         out_path=Path(out_path),
-        fmt=fmt,
         jd_excerpt_chars=jd_excerpt_chars,
         market_scope=market_scope,
         include_closed=include_closed,

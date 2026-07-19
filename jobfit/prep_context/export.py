@@ -12,7 +12,7 @@ from jobfit.dashboards.scoring import score as compute_score, tier as compute_ti
 from jobfit.prep_context.market import build_market_snapshot
 from jobfit.prep_context.overlap import compute_cv_skills, compute_job_overlap, prep_heuristic
 from jobfit.prep_context.redact import redact_excerpt
-from jobfit.prep_context.render import render_md, render_json
+from jobfit.prep_context.render import render_md
 from jobfit.roles import ROLES
 from jobfit.scoring_config import load_scoring_config
 
@@ -117,6 +117,7 @@ def _build_job_record(
 
     return {
         "id": f"S{idx}",
+        "refnr": cls_row.refnr,
         "title": cls_row.titel or job_row.titel or "",
         "company_type": meta.get("company_type"),
         "company_stage": meta.get("company_stage"),
@@ -144,19 +145,17 @@ def run(
     role_slug: str,
     cv_path: Path | None,
     out_path: Path,
-    fmt: str,
     jd_excerpt_chars: int,
     market_scope: str,
     include_closed: bool,
     dry_run: bool,
 ) -> None:
-    """Build and write the anonymized prep context file.
+    """Build and write the anonymized Markdown prep context file.
 
     Args:
         role_slug:        Role slug (e.g. "devops").
         cv_path:          Path to CV file; if None, uses role default via cv_read().
-        out_path:         Output path for the markdown file.
-        fmt:              "md", "json", or "both".
+        out_path:         Output path for the Markdown file.
         jd_excerpt_chars: Max chars of JD excerpt per job (0 = no excerpt).
         market_scope:     VIEW_CONFIGS key: "sm", "startup", "mittelstand", "enterprise".
         include_closed:   Include starred jobs whose closed_at is set.
@@ -209,13 +208,5 @@ def run(
         return
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
-
-    if fmt in ("md", "both"):
-        md_path = out_path if fmt == "md" else out_path.with_suffix(".md")
-        md_path.write_text(render_md(data), encoding="utf-8")
-        logger.info("Wrote {}", md_path)
-
-    if fmt in ("json", "both"):
-        json_path = out_path.with_suffix(".json")
-        json_path.write_text(render_json(data), encoding="utf-8")
-        logger.info("Wrote {}", json_path)
+    out_path.write_text(render_md(data), encoding="utf-8")
+    logger.info("Wrote {}", out_path)
