@@ -155,3 +155,88 @@ def cmd_mark_closed(dry_run: bool, role: str) -> None:
 @role_option
 def cmd_verify_urls(dry_run: bool, role: str) -> None:
     verify_urls.run(_ns(role_obj=ROLES[role], dry_run=dry_run))
+
+
+@cli.group(name="prep-context")
+def prep_context_group() -> None:
+    """Prep context export for interview preparation."""
+
+
+@prep_context_group.command(name="export")
+@role_option
+@click.option(
+    "--cv",
+    "cv_path",
+    default=None,
+    metavar="PATH",
+    help="CV file for overlap/gaps (default: role CV via cv_read). Use prompts/CV.md for interview truth.",
+)
+@click.option(
+    "--out",
+    "out_path",
+    default="prompts/prep_context.md",
+    metavar="PATH",
+    show_default=True,
+    help="Output path (.md or .json determined by --format).",
+)
+@click.option(
+    "--format",
+    "fmt",
+    default="md",
+    type=click.Choice(["md", "json", "both"]),
+    show_default=True,
+    help="Output format.",
+)
+@click.option(
+    "--jd-excerpt-chars",
+    default=400,
+    metavar="N",
+    show_default=True,
+    help="Max chars of anonymized JD excerpt per starred job (0 = omit excerpts).",
+)
+@click.option(
+    "--market-scope",
+    default="sm",
+    type=click.Choice(["sm", "startup", "mittelstand", "enterprise"]),
+    show_default=True,
+    help="Stage scope for market snapshot (sm = startup+mittelstand).",
+)
+@click.option(
+    "--include-closed",
+    is_flag=True,
+    help="Include starred jobs with jobs.closed_at set.",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Print summary counts; write nothing.",
+)
+def cmd_prep_context_export(
+    role: str,
+    cv_path: str | None,
+    out_path: str,
+    fmt: str,
+    jd_excerpt_chars: int,
+    market_scope: str,
+    include_closed: bool,
+    dry_run: bool,
+) -> None:
+    """Export an anonymized Markdown (and/or JSON) prep context for interview preparation.
+
+    Starred jobs are ordered by starred_at descending (S1 = most recently starred).
+    Company names are replaced with S1/S2/... identifiers; JD excerpts have firm
+    names, URLs, and emails scrubbed.
+    """
+    from pathlib import Path
+    from jobfit.prep_context import export as prep_export
+
+    prep_export.run(
+        role_slug=role,
+        cv_path=Path(cv_path) if cv_path else None,
+        out_path=Path(out_path),
+        fmt=fmt,
+        jd_excerpt_chars=jd_excerpt_chars,
+        market_scope=market_scope,
+        include_closed=include_closed,
+        dry_run=dry_run,
+    )
