@@ -26,8 +26,10 @@ _FIELD_REFERENCE = """\
 - **Top gaps** — skills common in the market that do not appear in the CV.
 
 ### Starred job fields
-- **S1, S2, …** — display ids; order is `starred_at` descending (newest star first).
+- **S1, S2, …** — display ids; same order as the Starred tab on the targets dashboard \
+(`sort_key`: higher score first, then stage, work_mode, firma). S1 = top row in the UI.
 - **refnr** — stable JobFit job id; used to merge human fields on re-export. Machine-written.
+- **starred_at** — when you starred the job (UTC); informational only, does not control S-order.
 - **company_type / stage / industry** — from classification.
 - **work_mode / on_call / german_level / english_ok** — from enrichment.
 - **tier / score** — target-company scoring (`dreamjob`, `cvbuilder`, `easywin`, `skip`), not prep fitness.
@@ -109,6 +111,9 @@ def render_market_md(snapshot: dict[str, Any]) -> str:
 def render_job_md(job: dict[str, Any], idx: int) -> str:
     lines: list[str] = [f"### S{idx}"]
     lines.append(f"- refnr: {job.get('refnr') or '-'}")
+    starred_at = job.get("starred_at") or ""
+    if starred_at:
+        lines.append(f"- starred_at: {starred_at}")
     lines.append(f"- title: {job.get('title') or '-'}")
     lines.append(
         f"- company_type / stage / industry: "

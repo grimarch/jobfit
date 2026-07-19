@@ -11,6 +11,7 @@ from jobfit.prep_context.render import render_job_md, render_md
 _JOB: dict = {
     "id": "S1",
     "refnr": "REF-12345",
+    "starred_at": "2026-07-19T12:00:00Z",
     "title": "DevOps Engineer",
     "company_type": "product",
     "company_stage": "startup",
@@ -82,6 +83,26 @@ def test_job_md_has_refnr():
 def test_job_md_refnr_appears_before_title():
     out = render_job_md(_JOB, 1)
     assert out.index("- refnr:") < out.index("- title:")
+
+
+def test_job_md_has_starred_at_when_present():
+    out = render_job_md(_JOB, 1)
+    assert "- starred_at: 2026-07-19T12:00:00Z" in out
+    assert out.index("- refnr:") < out.index("- starred_at:") < out.index("- title:")
+
+
+def test_job_md_omits_starred_at_when_empty():
+    job = {**_JOB, "starred_at": ""}
+    out = render_job_md(job, 1)
+    assert "starred_at" not in out
+
+
+def test_md_field_reference_mentions_dashboard_sort():
+    out = render_md(_DATA)
+    ref = out[out.index("## Field reference"):]
+    assert "Starred tab" in ref
+    assert "sort_key" in ref
+    assert "starred_at" in ref
 
 
 def test_job_md_has_prep_label_slot():

@@ -3,5 +3,5 @@
 CLI:   uv run python -m jobfit.cli prep-context export --help
 Entry: jobfit.prep_context.export.run()
 
-Starred jobs are ordered by starred_at descending (S1 = most recently starred).
+Starred jobs use the same sort_key as the targets Starred tab (S1 = top UI row).
 """

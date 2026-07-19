@@ -8,7 +8,12 @@ from typing import Any
 
 from loguru import logger
 
-from jobfit.dashboards.scoring import score as compute_score, tier as compute_tier, norm_firma
+from jobfit.dashboards.scoring import (
+    score as compute_score,
+    tier as compute_tier,
+    norm_firma,
+    sort_key,
+)
 from jobfit.prep_context.market import build_market_snapshot
 from jobfit.prep_context.merge import parse_human_fields
 from jobfit.prep_context.overlap import (
@@ -59,9 +64,39 @@ def _query_starred(role_slug: str, include_closed: bool) -> list[tuple[Any, Any]
         )
         if not include_closed:
             q = q.filter(Job.closed_at.is_(None))
-        q = q.order_by(Classification.starred_at.desc())
+        # Order is applied in Python via sort_key (same as Starred dashboard tab).
         rows = q.all()
     return rows  # type: ignore[return-value]
+
+
+def _sort_starred_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Sort like targets Starred tab; assign S1..Sn afterward (S1 = top dashboard row)."""
+
+    def _key(rec: dict[str, Any]) -> tuple[int, int, int, str]:
+        return sort_key(
+            {
+                "score": rec["score"],
+                "company_stage": rec.get("company_stage"),
+                "work_mode": rec.get("work_mode"),
+                "firma": rec.get("_sort_firma", ""),
+            }
+        )
+
+    ordered = sorted(records, key=_key)
+    for idx, rec in enumerate(ordered, start=1):
+        rec["id"] = f"S{idx}"
+        rec.pop("_sort_firma", None)
+    return ordered
+
+
+def _format_starred_at(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return str(value)
 
 
 def _as_of_date(rows: list[tuple[Any, Any]]) -> str:
@@ -100,7 +135,6 @@ def _build_preferences(role_slug: str) -> dict[str, Any]:
 def _build_job_record(
     cls_row: Any,
     job_row: Any,
-    idx: int,
     cv_skills: frozenset[str],
     role_slug: str,
     known_brands: frozenset[str],
@@ -125,8 +159,10 @@ def _build_job_record(
     )
 
     return {
-        "id": f"S{idx}",
+        "id": "",  # assigned after sort_key ordering
         "refnr": cls_row.refnr,
+        "starred_at": _format_starred_at(cls_row.starred_at),
+        "_sort_firma": cls_row.firma or job_row.firma or "",
         "title": cls_row.titel or job_row.titel or "",
         "company_type": meta.get("company_type"),
         "company_stage": meta.get("company_stage"),
@@ -190,9 +226,9 @@ def run(
     market = build_market_snapshot(role, cv_skills, scope=market_scope)
 
     starred_records: list[dict[str, Any]] = []
-    for idx, (cls_row, job_row) in enumerate(rows, start=1):
+    for cls_row, job_row in rows:
         record = _build_job_record(
-            cls_row, job_row, idx, cv_skills, role_slug,
+            cls_row, job_row, cv_skills, role_slug,
             known_brands, config, role, jd_excerpt_chars,
         )
         if cls_row.refnr in human_fields:
@@ -200,6 +236,8 @@ def run(
             record["why_starred"] = saved.get("why_starred", "")
             record["prep_label"] = saved.get("prep_label", "")
         starred_records.append(record)
+
+    starred_records = _sort_starred_records(starred_records)
 
     now_utc = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
     as_of = _as_of_date(rows)

@@ -221,9 +221,8 @@ def cmd_prep_context_export(
 ) -> None:
     """Export an anonymized Markdown prep context for interview preparation.
 
-    Starred jobs are ordered by starred_at descending (S1 = most recently starred).
-    Company names are replaced with S1/S2/... identifiers; JD excerpts have firm
-    names, URLs, and emails scrubbed.
+    Starred jobs use the same sort_key as the targets Starred tab (S1 = top UI row).
+    Company names are redacted in JD excerpts; match rows via order, title/score, or refnr.
 
     If --out already exists, human-edited why_starred and prep_label values are
     merged back by refnr. Use --no-merge to skip this and overwrite from scratch.
