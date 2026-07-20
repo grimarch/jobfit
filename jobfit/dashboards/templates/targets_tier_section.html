@@ -36,6 +36,34 @@
       <div class="card-desc" style="margin-bottom:0">{{ n }} positions · sorted by score</div>
     </div>
   </div>
+  <div style="display:flex;align-items:center;gap:7px;padding:10px 0 14px;flex-wrap:wrap">
+    <div class="flt-drop" style="position:relative">
+      <button class="flt-drop-btn" onclick="toggleDrop(this)" data-key="seniority"><span class="flt-lbl">Seniority</span><span style="opacity:.55;font-size:10px">▾</span></button>
+      <div class="flt-panel" style="display:none">
+        <label class="flt-opt"><input type="checkbox" value="junior" data-key="seniority" onchange="toggleDropFilter(this)"> Junior</label>
+        <label class="flt-opt"><input type="checkbox" value="mid" data-key="seniority" onchange="toggleDropFilter(this)"> Mid</label>
+        <label class="flt-opt"><input type="checkbox" value="senior" data-key="seniority" onchange="toggleDropFilter(this)"> Senior</label>
+        <label class="flt-opt"><input type="checkbox" value="lead" data-key="seniority" onchange="toggleDropFilter(this)"> Lead</label>
+      </div>
+    </div>
+    <div class="flt-drop" style="position:relative">
+      <button class="flt-drop-btn" onclick="toggleDrop(this)" data-key="stage"><span class="flt-lbl">Stage</span><span style="opacity:.55;font-size:10px">▾</span></button>
+      <div class="flt-panel" style="display:none">
+        <label class="flt-opt"><input type="checkbox" value="startup" data-key="stage" onchange="toggleDropFilter(this)"> Startup</label>
+        <label class="flt-opt"><input type="checkbox" value="mittelstand" data-key="stage" onchange="toggleDropFilter(this)"> Mittelstand</label>
+        <label class="flt-opt"><input type="checkbox" value="enterprise" data-key="stage" onchange="toggleDropFilter(this)"> Enterprise</label>
+      </div>
+    </div>
+    <div class="flt-drop" style="position:relative">
+      <button class="flt-drop-btn" onclick="toggleDrop(this)" data-key="mode"><span class="flt-lbl">Mode</span><span style="opacity:.55;font-size:10px">▾</span></button>
+      <div class="flt-panel" style="display:none">
+        <label class="flt-opt"><input type="checkbox" value="remote" data-key="mode" onchange="toggleDropFilter(this)"> Remote</label>
+        <label class="flt-opt"><input type="checkbox" value="hybrid" data-key="mode" onchange="toggleDropFilter(this)"> Hybrid</label>
+        <label class="flt-opt"><input type="checkbox" value="onsite" data-key="mode" onchange="toggleDropFilter(this)"> Onsite</label>
+      </div>
+    </div>
+    <button class="flt-clear-btn" onclick="clearFilters()" style="display:none">✕ Clear</button>
+  </div>
   <div style="overflow-x:auto">{{ table_html }}</div>
 </div>
 </div>

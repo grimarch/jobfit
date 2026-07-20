@@ -2,31 +2,14 @@
 <div><h1 class="page-title">Target Companies</h1>
 <p style="font-size:12px;color:var(--muted);margin-top:4px">Total: <strong>{{ total }}</strong> vacancies scored and tiered</p>
 </div></div>
-<div id="filter-bar" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 0 6px;border-bottom:1px solid var(--border);margin-bottom:12px">
-  <span style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em;flex-shrink:0">Filter</span>
-  <div style="display:flex;align-items:center;gap:5px">
-    <span style="font-size:10px;color:var(--muted);letter-spacing:.06em;margin-right:1px">Seniority</span>
-    <button onclick="toggleFilter('seniority','junior',this)" class="flt-pill">Junior</button>
-    <button onclick="toggleFilter('seniority','mid',this)" class="flt-pill">Mid</button>
-    <button onclick="toggleFilter('seniority','senior',this)" class="flt-pill">Senior</button>
-    <button onclick="toggleFilter('seniority','lead',this)" class="flt-pill">Lead</button>
-  </div>
-  <div style="display:flex;align-items:center;gap:5px">
-    <span style="font-size:10px;color:var(--muted);letter-spacing:.06em;margin-right:1px">Stage</span>
-    <button onclick="toggleFilter('stage','startup',this)" class="flt-pill">Startup</button>
-    <button onclick="toggleFilter('stage','mittelstand',this)" class="flt-pill">Mittelstand</button>
-    <button onclick="toggleFilter('stage','enterprise',this)" class="flt-pill">Enterprise</button>
-  </div>
-  <div style="display:flex;align-items:center;gap:5px">
-    <span style="font-size:10px;color:var(--muted);letter-spacing:.06em;margin-right:1px">Mode</span>
-    <button onclick="toggleFilter('mode','remote',this)" class="flt-pill">Remote</button>
-    <button onclick="toggleFilter('mode','hybrid',this)" class="flt-pill">Hybrid</button>
-    <button onclick="toggleFilter('mode','onsite',this)" class="flt-pill">Onsite</button>
-  </div>
-  <button onclick="clearFilters()" id="flt-clear" style="font-size:11px;padding:2px 9px;border:1px solid var(--border);border-radius:4px;background:none;cursor:pointer;color:var(--muted);display:none">✕ Clear</button>
-</div>
 <style>
-.flt-pill{font-size:11px;padding:2px 9px;border:1px solid var(--border);border-radius:12px;background:none;cursor:pointer;color:var(--muted);transition:background .12s,color .12s,border-color .12s}
-.flt-pill:hover{border-color:var(--accent);color:var(--accent)}
-.flt-pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.flt-drop-btn{font-size:12px;padding:5px 11px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;color:var(--muted);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;transition:border-color .12s,color .12s}
+.flt-drop-btn:hover{border-color:var(--accent);color:var(--accent)}
+.flt-drop-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.flt-panel{position:absolute;top:calc(100% + 4px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:7px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:300;min-width:148px;padding:4px 0}
+.flt-opt{display:flex;align-items:center;gap:8px;padding:6px 13px;font-size:12.5px;cursor:pointer;color:var(--text);user-select:none}
+.flt-opt:hover{background:var(--surface2)}
+.flt-opt input[type=checkbox]{cursor:pointer;accent-color:var(--accent);width:13px;height:13px}
+.flt-clear-btn{font-size:11px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;color:var(--muted);transition:border-color .12s,color .12s}
+.flt-clear-btn:hover{border-color:var(--bad);color:var(--bad)}
 </style>
