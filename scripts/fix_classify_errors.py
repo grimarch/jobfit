@@ -67,6 +67,12 @@ _TYPE_FIXES: dict[str, str] = {
     "Hubside": "product",
     "Workwise GmbH": "product",
     "Deutsche Telekom MMS GmbH": "product",
+    # Consulting — IT services/staffing, no own product
+    "Franklin Fitch Limited": "consulting",  # IT recruitment/staffing firm (UK)
+    "LZ Informatik": "consulting",  # Swiss IT managed services
+    "TRIOLOGY GmbH": "consulting",  # web agency
+    "TKD Solutions GmbH": "consulting",  # IT solutions/services
+    "Inlogy GmbH": "consulting",  # custom software dev & consulting, no own product
 }
 
 
