@@ -27,6 +27,7 @@ CANONICAL: list[str] = [
     "Public Sector",
     "IT Services / B2B",
     "SaaS / Cloud",
+    "Real Estate / PropTech",
     "Other",
 ]
 
@@ -60,12 +61,14 @@ _TAXONOMY: list[tuple[str, list[str]]] = [
     ("EdTech",              ["edtech", "ed tech", "education"]),
     ("Manufacturing",       ["manufacturing", "industrial", "electronics", "embedded",
                               "3d imaging", "spatial computing", "optics", "electron microscopy",
-                              "hvac", "ventilation", "construction tech"]),
+                              "hvac", "ventilation", "construction tech", "iot"]),
     ("Public Sector",       ["public sector", "government"]),
     ("IT Services / B2B",   ["it services", "it consulting", "managed services", "digital agency",
                               "b2b software", "engineering consulting", "design agency"]),
     ("SaaS / Cloud",        ["saas", "cloud", "software", "platform",
-                              "it infrastructure", "hosting", "developer tools", "it solutions"]),
+                              "it infrastructure", "hosting", "developer tools", "it solutions",
+                              "adtech", "martech", "marketing tech"]),
+    ("Real Estate / PropTech", ["real estate", "proptech", "prop tech"]),
 ]
 
 

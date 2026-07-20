@@ -12,7 +12,7 @@ from loguru import logger
 from tqdm import tqdm
 
 from jobfit.llm import complete as llm_complete, resolve_key, resolve_model
-from jobfit.industry import CANONICAL, update_unmatched
+from jobfit.industry import CANONICAL, normalize, update_unmatched
 from jobfit.roles import DEFAULT_ROLE, ROLES, Role
 
 load_dotenv()
@@ -143,7 +143,7 @@ def print_summary(role_slug: str = DEFAULT_ROLE) -> None:
         if v.get("company_type") == "product":
             stage = v.get("company_stage", "unknown")
             stages[stage] = stages.get(stage, 0) + 1
-            ind = v.get("industry", "unknown")
+            ind = normalize(v.get("industry") or "")
             industries[ind] = industries.get(ind, 0) + 1
 
     logger.info(
@@ -191,7 +191,7 @@ def audit(args: argparse.Namespace) -> None:
         logger.info("No invalid company_type values.")
 
     # Inconsistencies by company_type
-    by_firma: dict[str, list] = defaultdict(list)
+    by_firma: dict[str, list[str]] = defaultdict(list)
     for r in rows:
         by_firma[r.firma].append(r.company_type)
 
@@ -211,6 +211,48 @@ def audit(args: argparse.Namespace) -> None:
             split = "  vs  ".join(f"{n}x {t}" for t, n in sorted(counts.items(), key=lambda x: -x[1]))
             logger.warning(f"  {total:>3}x  {split:<40}  {firma}")
 
+    # Inconsistencies by company_stage
+    by_firma_stage: dict[str, list] = defaultdict(list)
+    for r in rows:
+        by_firma_stage[r.firma].append(r.company_stage)
+
+    _ADJACENT_STAGES = frozenset({"mittelstand", "enterprise"})
+
+    inconsistent_stage = []
+    for firma, stages in by_firma_stage.items():
+        known = [s for s in stages if s != "unknown"]
+        known_unique = set(known)
+        if len(known_unique) > 1 and not known_unique <= _ADJACENT_STAGES:
+            counts = {s: stages.count(s) for s in set(stages)}
+            total = sum(counts.values())
+            inconsistent_stage.append((total, firma, counts))
+
+    if not inconsistent_stage:
+        logger.info("No company_stage inconsistencies.")
+    else:
+        logger.warning(f"\ncompany_stage inconsistencies ({len(inconsistent_stage)} companies):\n")
+        for total, firma, counts in sorted(inconsistent_stage, reverse=True):
+            split = "  vs  ".join(f"{n}x {s}" for s, n in sorted(counts.items(), key=lambda x: -x[1]))
+            logger.warning(f"  {total:>3}x  {split:<40}  {firma}")
+
+    # Firma duplicates caused by encoding artifacts (NBSP, trailing spaces, etc.)
+    by_normalized: dict[str, set[str]] = defaultdict(set)
+    normalized_count: dict[str, int] = defaultdict(int)
+    for r in rows:
+        norm = r.firma.replace(" ", " ").strip()
+        by_normalized[norm].add(r.firma)
+        normalized_count[norm] += 1
+    dupes = {norm: firmas for norm, firmas in by_normalized.items() if len(firmas) > 1}
+    if dupes:
+        logger.warning(f"\nfirma duplicates after normalization ({len(dupes)} groups):\n")
+        for norm, firmas in sorted(dupes.items()):
+            n = normalized_count[norm]
+            logger.warning(f"  {n:>3}x  canonical: {norm!r}")
+            for f in sorted(firmas):
+                logger.warning(f"         raw: {f!r}")
+    else:
+        logger.info("No firma duplicates.")
+
     # Unmatched industries — refresh from current classifications + current normalize()
     registry = update_unmatched(role.slug)
     if registry:
@@ -222,7 +264,7 @@ def audit(args: argparse.Namespace) -> None:
 
 
 
-def _build_firma_cache(role_slug: str, min_count: int = 3) -> dict[str, dict]:
+def _build_firma_cache(role_slug: str, min_count: int = 3) -> dict[str, dict[str, Any]]:
     """Return firms with >= min_count consistent classifications.
 
     Consistent means all existing records for that firma agree on
@@ -247,11 +289,11 @@ def _build_firma_cache(role_slug: str, min_count: int = 3) -> dict[str, dict]:
             .all()
         )
 
-    by_firma: dict[str, list] = defaultdict(list)
+    by_firma: dict[str, list[tuple[str, str, str, int]]] = defaultdict(list)
     for r in rows:
         by_firma[r.firma].append((r.company_type, r.company_stage, r.industry, r.n))
 
-    cache: dict[str, dict] = {}
+    cache: dict[str, dict[str, Any]] = {}
     for firma, variants in by_firma.items():
         total = sum(v[3] for v in variants)
         if total < min_count:

@@ -1,9 +1,10 @@
 """Fix known classification errors in the DB.
 
-Three classes of errors:
+Four classes of errors:
 1. company_type='enterprise' — LLM confused type and stage; correct value is 'product'
 2. Public sector institutions misclassified as 'product' — fix to 'public_sector'
 3. Consulting/staffing firms misclassified as 'product', and vice versa — verified via web research
+4. company_stage wrong — web-verified correct stage (startup/mittelstand/enterprise/public_sector)
 
 Usage:
     uv run python scripts/fix_classify_errors.py           # dry-run, show changes
@@ -16,6 +17,36 @@ import sys
 from collections import defaultdict
 
 sys.path.insert(0, ".")
+
+
+# Companies with verified correct company_stage (web-researched).
+# Key: exact firma string. Value: correct company_stage.
+_STAGE_FIXES: dict[str, str] = {
+    # public_sector type must always have public_sector stage
+    "BWI GmbH": "public_sector",
+    "S-Markt & Mehrwert GmbH & Co. KG": "public_sector",
+    # Enterprise — large well-known companies misclassified as startup
+    "N26": "enterprise",           # neobank, ~1500 employees
+    "Jetbrains": "enterprise",     # global dev tools company
+    "Doctolib": "enterprise",      # >3000 employees, pan-European
+    "Flix": "enterprise",          # FlixBus/FlixTrain, global scale
+    "Aboutyougmbh": "enterprise",  # fashion platform, >1000 employees
+    # Mittelstand — established mid-size, misclassified as startup
+    "zollsoft GmbH": "mittelstand",  # founded 2011, ~400 employees, tomedo® medical SW
+    # Startup — young VC-backed companies misclassified as mittelstand/enterprise
+    "iVentureGroup": "startup",      # venture builder
+    "SINC GmbH": "startup",          # young consulting firm
+    "cloudopserve GmbH": "startup",  # founded 2022, 11-50 employees
+    "Xempus": "startup",             # VC-backed insurtech, Munich Startup
+    "Innocraft": "startup",          # InnoCraft / Matomo Analytics SaaS, small team
+    # Mittelstand — established mid-size, misclassified as startup/enterprise
+    "amaxo GmbH": "mittelstand",     # majority 6x (consulting)
+    "soft-park GmbH": "mittelstand", # majority 3x
+    "SOURCE GmbH": "mittelstand",    # majority 2x
+    "Dracoon GmbH": "mittelstand",   # founded 2008, 91 employees, acquired 2023
+    "Ventx GmbH": "mittelstand",     # founded 2013, 30 employees, MSP
+    "Ventx": "mittelstand",          # same company, alternate firma string
+}
 
 
 # Companies with verified correct company_type (web-researched).
@@ -82,9 +113,8 @@ def main(apply: bool, firma: str | None = None) -> None:
 
     tag = "APPLY" if apply else "DRY-RUN"
     scope = f"firma={firma!r}" if firma else "all"
-    fixes: list[
-        tuple[C, str, str, str, str]
-    ] = []  # (row, old_type, old_stage, new_type, new_stage)
+    # (row, old_firma, old_type, old_stage, new_firma, new_type, new_stage)
+    fixes: list[tuple[C, str, str, str, str, str, str]] = []
 
     with get_session() as session:
         q = session.query(C)
@@ -97,6 +127,8 @@ def main(apply: bool, firma: str | None = None) -> None:
             return
 
         for row in rows:
+            # Fix 0: normalize firma — strip whitespace and non-breaking spaces
+            new_firma = row.firma.replace(" ", " ").strip()
             new_type = row.company_type
             new_stage = row.company_stage
 
@@ -105,39 +137,49 @@ def main(apply: bool, firma: str | None = None) -> None:
                 new_type = "product"
 
             # Fix 2 & 3: web-verified correct company_type
-            if row.firma in _TYPE_FIXES:
-                new_type = _TYPE_FIXES[row.firma]
+            if new_firma in _TYPE_FIXES:
+                new_type = _TYPE_FIXES[new_firma]
 
-            # When type CHANGES TO public_sector, stage must also be public_sector
-            if new_type == "public_sector" and row.company_type != "public_sector":
+            # public_sector type always gets public_sector stage
+            if new_type == "public_sector":
                 new_stage = "public_sector"
 
+            # Fix 4: web-verified correct company_stage (overrides generic rules above)
+            if new_firma in _STAGE_FIXES:
+                new_stage = _STAGE_FIXES[new_firma]
+
             # TenneT was wrongly classified as public_sector/public_sector
-            if row.firma == "TenneT TSO GmbH Unternehmensleitung":
+            if new_firma == "TenneT TSO GmbH Unternehmensleitung":
                 new_stage = "enterprise"
 
-            if new_type != row.company_type or new_stage != row.company_stage:
-                fixes.append(
-                    (row, row.company_type, row.company_stage, new_type, new_stage)
-                )
+            if new_firma != row.firma or new_type != row.company_type or new_stage != row.company_stage:
+                fixes.append((row, row.firma, row.company_type, row.company_stage, new_firma, new_type, new_stage))
 
         if not fixes:
             print("No errors found.")
             return
 
-        # Group by change for readable output
-        by_change: dict[tuple, list[str]] = defaultdict(list)
-        for row, old_t, old_s, new_t, new_s in fixes:
-            by_change[(old_t, old_s, new_t, new_s)].append(row.firma)
+        # Group by change for readable output — firma normalization and type/stage separately
+        firma_changes: dict[tuple, int] = defaultdict(int)
+        ts_changes: dict[tuple, list[str]] = defaultdict(list)
+        for row, old_f, old_t, old_s, new_f, new_t, new_s in fixes:
+            if old_f != new_f:
+                firma_changes[(old_f, new_f)] += 1
+            if old_t != new_t or old_s != new_s:
+                ts_changes[(old_t, old_s, new_t, new_s)].append(new_f)
 
         print(f"[{tag}] {len(fixes)} records to fix ({scope}):\n")
-        for (old_t, old_s, new_t, new_s), firmas in sorted(by_change.items()):
+        for (old_f, new_f), n in sorted(firma_changes.items()):
+            print(f"  firma normalized  ({n} records)")
+            print(f"    {old_f!r} → {new_f!r}")
+        for (old_t, old_s, new_t, new_s), firmas in sorted(ts_changes.items()):
             print(f"  {old_t}/{old_s}  →  {new_t}/{new_s}  ({len(firmas)} records)")
-            for firma in sorted(set(firmas)):
-                print(f"    {firma}")
+            for f in sorted(set(firmas)):
+                print(f"    {f}")
 
         if apply:
-            for row, _, _, new_t, new_s in fixes:
+            for row, _, _, _, new_f, new_t, new_s in fixes:
+                row.firma = new_f
                 row.company_type = new_t
                 row.company_stage = new_s
             print("\n[APPLY] Done.")
