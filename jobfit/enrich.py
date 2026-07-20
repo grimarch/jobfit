@@ -56,16 +56,15 @@ ENGLISH_OK_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Ordered from highest to lowest — first match wins
+# Soft adjectives only — checked after explicit CEFR (see _explicit_cefr).
+# Ordered from highest to lowest — first match wins.
 GERMAN_LEVEL_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     (
         "C2",
         re.compile(
             r"muttersprachlich(e[sn]?)?\s*(deutsch|kenntnisse)?"
             r"|verhandlungssicher(e[sn]?)?\s*deutsch"
-            r"|deutsch\s+verhandlungssicher"
-            r"|\bC2\b.{0,20}(deutsch|german)"
-            r"|(deutsch|german).{0,20}\bC2\b",
+            r"|deutsch\s+verhandlungssicher",
             re.IGNORECASE,
         ),
     ),
@@ -75,9 +74,7 @@ GERMAN_LEVEL_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
             r"fließend(e[sn]?)?\s+deutsch(kenntnisse)?"
             r"|deutsch\s+fließend"
             r"|sehr\s+gut(e[sn]?)?\s+deutsch(kenntnisse)?"
-            r"|deutsch(kenntnisse)?.{0,20}sehr\s+gut"
-            r"|\bC1\b.{0,20}(deutsch|german)"
-            r"|(deutsch|german).{0,20}\bC1\b",
+            r"|deutsch(kenntnisse)?.{0,20}sehr\s+gut",
             re.IGNORECASE,
         ),
     ),
@@ -85,9 +82,7 @@ GERMAN_LEVEL_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
         "B2",
         re.compile(
             r"gut(e[sn]?)?\s+deutsch(kenntnisse)?"
-            r"|deutsch(kenntnisse)?.{0,20}gut(e[sn])?"
-            r"|\bB2\b.{0,20}(deutsch|german)"
-            r"|(deutsch|german).{0,20}\bB2\b",
+            r"|deutsch(kenntnisse)?.{0,20}gut(e[sn])?",
             re.IGNORECASE,
         ),
     ),
@@ -95,13 +90,52 @@ GERMAN_LEVEL_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
         "B1",
         re.compile(
             r"grundkenntnisse.{0,20}deutsch"
-            r"|deutsch.{0,20}grundkenntnisse"
-            r"|\bB1\b.{0,20}(deutsch|german)"
-            r"|(deutsch|german).{0,20}\bB1\b",
+            r"|deutsch.{0,20}grundkenntnisse",
             re.IGNORECASE,
         ),
     ),
 ]
+
+# CEFR tokens near Deutsch/German. Window must cover phrases like
+# "Deutsch verhandlungssicher … (mindestens B1)".
+_CEFR_NEAR = 80
+_CEFR_ORDER = ("A1", "A2", "B1", "B2", "C1", "C2")
+_CEFR_MIN_RE = re.compile(
+    r"(?:mindestens|mind\.?|min\.?|at\s+least)\s*\(?\s*(A1|A2|B1|B2|C1|C2)\b",
+    re.IGNORECASE,
+)
+_CEFR_NEAR_DE_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
+    (
+        level,
+        re.compile(
+            rf"\b{level}\b.{{0,{_CEFR_NEAR}}}(deutsch|german)"
+            rf"|(deutsch|german).{{0,{_CEFR_NEAR}}}\b{level}\b",
+            re.IGNORECASE,
+        ),
+    )
+    for level in _CEFR_ORDER
+]
+
+
+def _explicit_cefr(text: str) -> str | None:
+    """Return an explicit CEFR level when Deutsch/German is required.
+
+    Explicit tokens beat soft adjectives (e.g. verhandlungssicher → C2).
+    A stated minimum (mindestens B1) wins over nearby higher soft/CEFR noise.
+    When several CEFR levels appear as alternatives (C1 oder C2), take the
+    lowest — that is the requirement floor.
+    """
+    if not re.search(r"deutsch|german", text, re.IGNORECASE):
+        return None
+
+    mins = [m.group(1).upper() for m in _CEFR_MIN_RE.finditer(text)]
+    if mins:
+        return min(mins, key=_CEFR_ORDER.index)
+
+    found = [level for level, pat in _CEFR_NEAR_DE_PATTERNS if pat.search(text)]
+    if found:
+        return min(found, key=_CEFR_ORDER.index)
+    return None
 
 # German stop-word density — used to detect English-language descriptions.
 # German text: ~15-30 hits per 1000 chars; English text: <4.
@@ -294,8 +328,9 @@ def detect_work_mode(text: str) -> str:
 
 def detect_language(text: str) -> tuple[bool, str | None]:
     """Returns (english_ok, german_level).
-    german_level: 'B1'|'B2'|'C1'|'C2'|'required'|None
+    german_level: 'A1'|'A2'|'B1'|'B2'|'C1'|'C2'|'required'|None
     'required' means German is needed but level not specified.
+    Explicit CEFR tokens beat soft adjectives (verhandlungssicher, fließend, …).
     """
     if ENGLISH_OK_RE.search(text):
         return True, None
@@ -303,6 +338,11 @@ def detect_language(text: str) -> tuple[bool, str | None]:
     # Description written in English → team works in English
     if _is_english_description(text):
         return True, None
+
+    # Explicit CEFR (e.g. mindestens B1) beats soft adjectives like verhandlungssicher
+    cefr = _explicit_cefr(text)
+    if cefr is not None:
+        return False, cefr
 
     for level, pat in GERMAN_LEVEL_PATTERNS:
         if pat.search(text):

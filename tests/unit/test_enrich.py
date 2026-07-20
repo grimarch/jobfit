@@ -57,6 +57,26 @@ def test_detect_work_mode(text, expected):
     ("Deutsch B2 Niveau",                                   False, "B2"),
     ("Grundkenntnisse Deutsch",                             False, "B1"),
     ("Deutsch B1 Kenntnisse",                               False, "B1"),
+    # Explicit CEFR beats soft "verhandlungssicher" → C2
+    (
+        "Du sprichst Deutsch verhandlungssicher in Wort und Schrift (mindestens B1).",
+        False,
+        "B1",
+    ),
+    (
+        "Deutschkenntnisse verhandlungssicher, mind. B2",
+        False,
+        "B2",
+    ),
+    # Alternatives: requirement floor is the lower level
+    (
+        "Sehr gute Sprachkenntnisse (in Wort und Schrift) sowie "
+        "Kommunikationsfähigkeiten jeweils auf C1- oder C2-Niveau "
+        "in Deutsch und Englisch",
+        False,
+        "C1",
+    ),
+    ("Deutschkenntnisse auf C1 oder C2 Niveau", False, "C1"),
     ("Deutschkenntnisse erforderlich",                      False, "required"),
     ("Deutsch zwingend vorausgesetzt",                      False, "required"),
     (GERMAN_TEXT_DENSE,                                     False, None),
