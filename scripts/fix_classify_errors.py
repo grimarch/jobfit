@@ -8,6 +8,7 @@ Three classes of errors:
 Usage:
     uv run python scripts/fix_classify_errors.py           # dry-run, show changes
     uv run python scripts/fix_classify_errors.py --apply   # apply to DB
+    uv run python scripts/fix_classify_errors.py --firma Huzzle --apply
 """
 
 import argparse
@@ -62,24 +63,32 @@ _TYPE_FIXES: dict[str, str] = {
     "SUMMIT IT CONSULT GmbH": "product",
     "NorCom": "product",
     "KUMAVISION AG": "product",
-    "Huzzle": "product",
+    "Huzzle": "consulting",
     "Hubside": "product",
     "Workwise GmbH": "product",
     "Deutsche Telekom MMS GmbH": "product",
 }
 
 
-def main(apply: bool) -> None:
+def main(apply: bool, firma: str | None = None) -> None:
     from jobfit.db import get_session
     from jobfit.db.models import Classification as C
 
     tag = "APPLY" if apply else "DRY-RUN"
+    scope = f"firma={firma!r}" if firma else "all"
     fixes: list[
         tuple[C, str, str, str, str]
     ] = []  # (row, old_type, old_stage, new_type, new_stage)
 
     with get_session() as session:
-        rows = session.query(C).all()
+        q = session.query(C)
+        if firma is not None:
+            q = q.filter(C.firma == firma)
+        rows = q.all()
+
+        if firma is not None and not rows:
+            print(f"No classification records for firma={firma!r}.")
+            return
 
         for row in rows:
             new_type = row.company_type
@@ -115,7 +124,7 @@ def main(apply: bool) -> None:
         for row, old_t, old_s, new_t, new_s in fixes:
             by_change[(old_t, old_s, new_t, new_s)].append(row.firma)
 
-        print(f"[{tag}] {len(fixes)} records to fix:\n")
+        print(f"[{tag}] {len(fixes)} records to fix ({scope}):\n")
         for (old_t, old_s, new_t, new_s), firmas in sorted(by_change.items()):
             print(f"  {old_t}/{old_s}  →  {new_t}/{new_s}  ({len(firmas)} records)")
             for firma in sorted(set(firmas)):
@@ -133,5 +142,10 @@ def main(apply: bool) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--apply", action="store_true")
+    parser.add_argument(
+        "--firma",
+        metavar="NAME",
+        help="Only fix records with this exact firma string",
+    )
     args = parser.parse_args()
-    main(apply=args.apply)
+    main(apply=args.apply, firma=args.firma)
