@@ -14,7 +14,7 @@
 </tr></thead>
 <tbody>
 {% for r in rows %}
-<tr data-seniority="{{ r.sen_b.text if r.sen_b else '' }}" data-stage="{{ r.stage_b.text }}" data-mode="{{ r.mode_b.text }}">
+<tr data-seniority="{{ r.sen_b.text if r.sen_b else '' }}" data-stage="{{ r.stage_b.text }}" data-mode="{{ r.mode_b.text }}" data-lang="{{ r.lang_b.key }}">
 <td data-val="{{ r.score }}" style="font-weight:700;color:{{ r.tier_color }};font-variant-numeric:tabular-nums;text-align:center">{{ r.score }}</td>
 {% if r.tier_b %}<td data-val="{{ r.tier_b.sort }}">{{ badge(r.tier_b.text, r.tier_b.style) }}</td>{% endif %}
 <td data-val="{{ r.firma_lower }}" style="font-weight:600;max-width:180px">

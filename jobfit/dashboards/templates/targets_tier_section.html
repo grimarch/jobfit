@@ -62,6 +62,17 @@
         <label class="flt-opt"><input type="checkbox" value="onsite" data-key="mode" onchange="toggleDropFilter(this)"> Onsite</label>
       </div>
     </div>
+    <div class="flt-drop" style="position:relative">
+      <button class="flt-drop-btn" onclick="toggleDrop(this)" data-key="lang"><span class="flt-lbl">Lang</span><span style="opacity:.55;font-size:10px">▾</span></button>
+      <div class="flt-panel" style="display:none">
+        <label class="flt-opt"><input type="checkbox" value="en" data-key="lang" onchange="toggleDropFilter(this)"> EN ✓</label>
+        <label class="flt-opt"><input type="checkbox" value="b1" data-key="lang" onchange="toggleDropFilter(this)"> DE B1</label>
+        <label class="flt-opt"><input type="checkbox" value="b2" data-key="lang" onchange="toggleDropFilter(this)"> DE B2</label>
+        <label class="flt-opt"><input type="checkbox" value="c1" data-key="lang" onchange="toggleDropFilter(this)"> DE C1</label>
+        <label class="flt-opt"><input type="checkbox" value="c2" data-key="lang" onchange="toggleDropFilter(this)"> DE C2</label>
+        <label class="flt-opt"><input type="checkbox" value="?" data-key="lang" onchange="toggleDropFilter(this)"> DE ?</label>
+      </div>
+    </div>
     <button class="flt-clear-btn" onclick="clearFilters()" style="display:none">✕ Clear</button>
   </div>
   <div style="overflow-x:auto">{{ table_html }}</div>

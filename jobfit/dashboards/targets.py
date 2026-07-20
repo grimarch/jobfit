@@ -410,7 +410,7 @@ def _jobs_table(jobs: list[dict[str, Any]], tier_color: str, table_id: str, show
             "industry_lower": industry.lower(),
             "stage_b":        {"text": stage,     "style": _STAGE_STYLE.get(stage, _BADGE_NEUTRAL),     "sort": _STAGE_SORT.get(stage, 3)},
             "mode_b":         {"text": mode,      "style": _MODE_STYLE.get(mode,   _BADGE_NEUTRAL),     "sort": _MODE_SORT.get(mode, 9)},
-            "lang_b":         {"text": lang_text, "style": lang_style,                                   "sort": _LANG_SORT.get(lang_key, 6)},
+            "lang_b":         {"text": lang_text, "style": lang_style, "key": lang_key,                 "sort": _LANG_SORT.get(lang_key, 6)},
             "ort":            ort,
             "ort_lower":      ort.lower(),
             "sen_b":          {"text": seniority, "style": _SENIORITY_STYLE.get(seniority, _BADGE_NEUTRAL), "sort": _SENIORITY_SORT.get(seniority, 9)} if seniority else None,

@@ -1,6 +1,6 @@
 
-var _activeFilters={seniority:new Set(),stage:new Set(),mode:new Set()};
-var _FLT_NAMES={seniority:'Seniority',stage:'Stage',mode:'Mode'};
+var _activeFilters={seniority:new Set(),stage:new Set(),mode:new Set(),lang:new Set()};
+var _FLT_NAMES={seniority:'Seniority',stage:'Stage',mode:'Mode',lang:'Lang'};
 function toggleDrop(btn){
     var panel=btn.nextElementSibling;
     var isOpen=panel.style.display!=='none';
