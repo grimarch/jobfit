@@ -59,7 +59,7 @@ It pulls listings from public APIs and ATS feeds, normalizes them into PostgreSQ
 
 ### Market Intelligence
 - **Multi-source ingestion** — Bundesagentur API, jobhive (13 ATS platforms), Softgarden feeds, Ever Jobs sidecar
-- **LLM classification** — company type (product / agency / enterprise), industry, tech stack signals
+- **LLM classification** — company type (`product` / `consulting` / `public_sector`), stage (`startup` / `mittelstand` / `enterprise`), industry vertical
 - **Regex enrichment** — work mode, seniority, language requirements, salary parsing
 - **Closed-job tracking** — detects vacancies that disappeared from feeds
 - **Brand tiering** — ranks companies into target tiers for focused job search
@@ -240,6 +240,13 @@ docker compose exec app jobfit serve rebuild
 
 `classify` and `brands` need an LLM API key and stay outside automated sync — by design, since they cost money.
 
+After classification, run the audit and fix any flagged inconsistencies:
+```bash
+docker compose exec app jobfit classify --audit
+uv run python scripts/fix_classify_errors.py          # dry-run
+uv run python scripts/fix_classify_errors.py --apply  # write to DB
+```
+
 ### Backups
 
 ```bash
@@ -309,6 +316,8 @@ jobfit cv anschreiben <refnr> # cover letter PDF (DIN 5008)
 ```
 
 All commands accept `--role` (default: `devops`). Handy flags: `--dry-run`, `--limit N`, `--audit`.
+
+`jobfit classify --audit` checks four things without making LLM calls: invalid `company_type` values, `company_type` inconsistencies across jobs from the same company, `company_stage` inconsistencies (ignoring the adjacent `mittelstand`/`enterprise` boundary), and firma name duplicates caused by encoding artifacts (non-breaking spaces, trailing whitespace). Known classification errors can be corrected manually via `scripts/fix_classify_errors.py` (dry-run by default, `--apply` to write).
 
 ## 🌐 Web API
 
