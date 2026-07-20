@@ -1,4 +1,29 @@
 
+var _activeFilters={seniority:new Set(),stage:new Set(),mode:new Set()};
+function applyFilters(){
+    var any=Object.keys(_activeFilters).some(function(k){return _activeFilters[k].size>0;});
+    document.getElementById('flt-clear').style.display=any?'':'none';
+    document.querySelectorAll('tbody tr').forEach(function(row){
+        if(!any){row.style.display='';return;}
+        var show=true;
+        for(var k in _activeFilters){
+            if(_activeFilters[k].size===0)continue;
+            var v=(row.dataset[k]||'').toLowerCase();
+            if(!_activeFilters[k].has(v)){show=false;break;}
+        }
+        row.style.display=show?'':'none';
+    });
+}
+function toggleFilter(key,val,btn){
+    if(_activeFilters[key].has(val)){_activeFilters[key].delete(val);btn.classList.remove('active');}
+    else{_activeFilters[key].add(val);btn.classList.add('active');}
+    applyFilters();
+}
+function clearFilters(){
+    for(var k in _activeFilters)_activeFilters[k].clear();
+    document.querySelectorAll('.flt-pill').forEach(function(b){b.classList.remove('active');});
+    applyFilters();
+}
 function syncStarredCount(){
     fetch('/api/starred-status?role={{ role_slug }}')
         .then(function(r){return r.ok?r.json():{starred:[]};} )

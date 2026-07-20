@@ -2,3 +2,31 @@
 <div><h1 class="page-title">Target Companies</h1>
 <p style="font-size:12px;color:var(--muted);margin-top:4px">Total: <strong>{{ total }}</strong> vacancies scored and tiered</p>
 </div></div>
+<div id="filter-bar" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 0 6px;border-bottom:1px solid var(--border);margin-bottom:12px">
+  <span style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em;flex-shrink:0">Filter</span>
+  <div style="display:flex;align-items:center;gap:5px">
+    <span style="font-size:10px;color:var(--muted);letter-spacing:.06em;margin-right:1px">Seniority</span>
+    <button onclick="toggleFilter('seniority','junior',this)" class="flt-pill">Junior</button>
+    <button onclick="toggleFilter('seniority','mid',this)" class="flt-pill">Mid</button>
+    <button onclick="toggleFilter('seniority','senior',this)" class="flt-pill">Senior</button>
+    <button onclick="toggleFilter('seniority','lead',this)" class="flt-pill">Lead</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:5px">
+    <span style="font-size:10px;color:var(--muted);letter-spacing:.06em;margin-right:1px">Stage</span>
+    <button onclick="toggleFilter('stage','startup',this)" class="flt-pill">Startup</button>
+    <button onclick="toggleFilter('stage','mittelstand',this)" class="flt-pill">Mittelstand</button>
+    <button onclick="toggleFilter('stage','enterprise',this)" class="flt-pill">Enterprise</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:5px">
+    <span style="font-size:10px;color:var(--muted);letter-spacing:.06em;margin-right:1px">Mode</span>
+    <button onclick="toggleFilter('mode','remote',this)" class="flt-pill">Remote</button>
+    <button onclick="toggleFilter('mode','hybrid',this)" class="flt-pill">Hybrid</button>
+    <button onclick="toggleFilter('mode','onsite',this)" class="flt-pill">Onsite</button>
+  </div>
+  <button onclick="clearFilters()" id="flt-clear" style="font-size:11px;padding:2px 9px;border:1px solid var(--border);border-radius:4px;background:none;cursor:pointer;color:var(--muted);display:none">✕ Clear</button>
+</div>
+<style>
+.flt-pill{font-size:11px;padding:2px 9px;border:1px solid var(--border);border-radius:12px;background:none;cursor:pointer;color:var(--muted);transition:background .12s,color .12s,border-color .12s}
+.flt-pill:hover{border-color:var(--accent);color:var(--accent)}
+.flt-pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+</style>
