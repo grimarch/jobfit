@@ -8,7 +8,7 @@ slug: devops
 gaps_heading: "## Gaps vs prep shortlist (honest transfer lines)"
 gaps_intro: |
   Union of `gaps_vs_cv` from starred jobs with prep_label ∈ fit / stretch / brand-only.
-  **Jobs** and **Count** refresh on `--merge`. Fill **Do not claim** and **Say instead** in Pass 2.
+  **Jobs** and **Count** refresh on `--merge`. Do not/Say from `gap_lines.yaml` or LLM Step 1.
 
 sections:
   - title: Core DevOps & platform

@@ -269,7 +269,7 @@ def prep_claims_group() -> None:
     "out_path",
     default=None,
     metavar="PATH",
-    help="Output claims markdown (default: prompts/prep/{role}/claims.md).",
+    help="Output claims markdown (default: draft → claims.draft.md; --merge → claims.md).",
 )
 @click.option(
     "--prep-labels",
@@ -316,10 +316,10 @@ def cmd_prep_claims_draft(
     With --context, adds a Gaps table from gaps_vs_cv on starred jobs whose
     prep_label is in --prep-labels (default: fit, stretch, brand-only).
 
-    Use --merge to refresh gap Jobs/Count without overwriting claims tables.
-    Reviewed files merge automatically when --out exists and --force is not set.
+    Use --merge to refresh gap Jobs/Count on reviewed claims.md (default --out for merge).
+    Draft writes to claims.draft.md; interview SoT is claims.md after LLM + verify.
 
-    Always review the draft before using in interviews.
+    Always review before using in interviews.
     """
     from pathlib import Path
 
@@ -333,7 +333,12 @@ def cmd_prep_claims_draft(
     else:
         ctx = None
 
-    out = Path(out_path) if out_path else Path(f"prompts/prep/{role}/claims.md")
+    if out_path:
+        out = Path(out_path)
+    elif merge:
+        out = prep_claims.default_reviewed_path(role)
+    else:
+        out = prep_claims.default_draft_path(role)
     labels = frozenset(l.strip().lower() for l in prep_labels.split(",") if l.strip())
 
     if gap_lines_path:

@@ -17,6 +17,8 @@ from jobfit.prep_context.overlap import compute_cv_skills
 from jobfit.roles import ROLES, Role
 
 _GAP_LINES_FILE = "gap_lines.yaml"
+_DRAFT_CLAIMS_FILE = "claims.draft.md"
+_REVIEWED_CLAIMS_FILE = "claims.md"
 
 _BLOCK_SPLIT_RE = re.compile(r"^### S\d+", re.MULTILINE)
 _FIELD_RE = re.compile(r"^- ([a-z_]+):[ \t]*(.*)", re.MULTILINE)
@@ -30,6 +32,16 @@ _PREP_FOR_GAPS = frozenset({"fit", "stretch", "brand-only"})
 def default_gap_lines_path(role_slug: str) -> Path:
     """User-owned optional cache for Honest line text (gitignored input dir)."""
     return config.role_input_dir(role_slug) / _GAP_LINES_FILE
+
+
+def default_draft_path(role_slug: str) -> Path:
+    """Machine draft output from prep-claims draft."""
+    return Path(f"prompts/prep/{role_slug}") / _DRAFT_CLAIMS_FILE
+
+
+def default_reviewed_path(role_slug: str) -> Path:
+    """Interview SoT after human verify (gaps merge target)."""
+    return Path(f"prompts/prep/{role_slug}") / _REVIEWED_CLAIMS_FILE
 
 
 def load_gap_lines(path: Path | None) -> dict[str, GapLineEntry]:
@@ -321,8 +333,8 @@ def render_claims_md(
     lines.extend(
         [
             "",
-            "> Review Pass 1: fix Evidence bullets against CV.md. Pass 2: fill Gaps **Do not claim**"
-            " / **Say instead**. Structure is stable — use `--merge` to refresh gap counts only.",
+            "> Next: LLM refine (Step 1) → human verify (Step 2) → claims.md. See docs/prep-claims-review.md."
+            " Gaps Jobs/Count: `--merge` on reviewed file.",
             "",
             "**Status:** `ok` = bullet matched · `weak` = skills list or thin evidence · edit freely",
             "",
@@ -394,16 +406,22 @@ def render_claims_md(
             "2. **Specific application** — read that job's `gaps_vs_cv` in `context.md`.",
             "3. **Stories (Phase 2)** — expand one `ok` row into STAR in `stories.md`.",
             "",
-            "Refresh gap counts without losing edits:",
+            "Refresh gap counts on reviewed claims (preserves Claims tables):",
             "",
             "```bash",
             f"jobfit prep-claims draft --role {role_slug} --merge",
             "```",
             "",
-            "Full regenerate (overwrites claims tables):",
+            "Regenerate machine draft (overwrites claims.draft.md):",
             "",
             "```bash",
             f"jobfit prep-claims draft --role {role_slug} --force",
+            "```",
+            "",
+            "After LLM + verify, promote to SoT:",
+            "",
+            "```bash",
+            f"cp prompts/prep/{role_slug}/claims.llm.md prompts/prep/{role_slug}/claims.md",
             "```",
             "",
         ]

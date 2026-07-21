@@ -37,7 +37,9 @@ prompts/
     README.md                    # this convention
     devops/
       context.md                 # export: prefs, market, starred (was prep_context.md)
-      claims.md                  # Phase 0c: skill → CV bullet evidence
+      claims.draft.md            # Phase 0c: CLI machine draft (default prep-claims output)
+      claims.llm.md              # optional: LLM-refined draft for review
+      claims.md                  # Phase 0c: reviewed SoT after human verify
       personas.md                # Phase 1: 3 practice JDs (S1, S4, …)
       stories.md                 # Phase 2: STAR-style answers DE+EN
       notes.md                   # Phase 3–4: tech depth + DE funnel (pitch, Gehalt)
@@ -68,8 +70,8 @@ Re-export **merges** your `prep_label` / `why_starred` by `refnr` (unless `--no-
 
 | Step | Command | Output | Human review |
 |---|---|---|---|
-| Claim → evidence draft | `jobfit prep-claims draft` | `claims.md` — structured sections, CV-matched evidence | Pass 1 content fixes |
-| Gaps from shortlist | same + `--context`; refresh counts | Gaps table (Jobs/Count) | Pass 2 Do not/Say; use `--merge` |
+| Claim → evidence draft | `jobfit prep-claims draft` | `claims.draft.md` — structured sections, CV-matched evidence | — |
+| Gaps from shortlist | same + `--context`; refresh counts on SoT | Gaps table (Jobs/Count) on `claims.md` via `--merge` | Step 2 verify; `gap_lines.yaml` |
 | Story draft | agent / manual | `stories.md` | Required |
 | Persona checklist | manual | `personas.md` | Confirm S* choice |
 
@@ -102,12 +104,11 @@ Run when starting a new search wave or switching role focus.
 6. Fill `why_starred` (why starred + prep caveats: on-call, onsite, gaps)
 7. Re-export to refresh machine fields without losing human fields
 
-### C. CV alignment (claims.md)
+### C. Claims (Phase 0c)
 
-8. `jobfit prep-claims draft --role ROLE --cv prompts/CV.md --force` (first time)  
-   Re-export gaps only: `jobfit prep-claims draft --role ROLE --merge` (preserves edits; auto on **Reviewed** file)
-9. **Review draft** — Pass 1–4: [prep-claims-review.md](prep-claims-review.md) (fact check → gaps → optional LLM structure → freeze **Reviewed** header)
-10. Do not claim skills you only marked for transfer in Gaps; do not use interview material while header still says **Draft**
+8. `jobfit prep-claims draft --role ROLE --force` → `claims.draft.md`  
+9. Follow **[prep-claims-review.md](prep-claims-review.md)** (LLM → verify → `claims.md`)  
+10. Gap refresh only: `jobfit prep-claims draft --role ROLE --merge`
 
 ### D. Practice material
 
@@ -127,7 +128,7 @@ Run when starting a new search wave or switching role focus.
 |---|---|---|
 | 0a | `context.md` | export done |
 | 0b | human fields in `context.md` | all starred labeled |
-| 0c | `claims.md` | draft reviewed — see [prep-claims-review.md](prep-claims-review.md) Definition of done |
+| 0c | `claims.md` | **Reviewed** — [prep-claims-review.md](prep-claims-review.md) |
 | 1 | `personas.md` | 3 JDs chosen + anchors from claims |
 | 2 | `stories.md` | 8–10 stories DE+EN |
 | 3 | `notes.md` (depth) | core stack + starred gaps covered |
@@ -153,7 +154,7 @@ Full table: [prompts/prep/README.md](../prompts/prep/README.md).
 | File | Question it answers | JobFit command |
 |---|---|---|
 | `context.md` | Which starred jobs, market gaps, overlap **per job**? | `prep-context export` |
-| `claims.md` | What can I **prove** from CV? What to say about **shortlist gaps**? | `prep-claims draft` → [review](prep-claims-review.md) |
+| `claims.md` | What can I **prove** from CV? | [prep-claims-review.md](prep-claims-review.md) |
 | `personas.md` | Which 3 JDs do I practice on? | — (manual) |
 | `stories.md` | How do I tell the story in an interview? | — (manual / agent) |
 | `notes.md` | Depth + HR pitch + Gehalt | — (manual) |
@@ -172,13 +173,8 @@ jobfit prep-context export \
   --jd-excerpt-chars 400 \
   --market-scope sm
 
-# 2. Draft claims + gaps (review before use!)
-jobfit prep-claims draft \
-  --role devops \
-  --cv prompts/CV.md \
-  --context prompts/prep/devops/context.md \
-  --out prompts/prep/devops/claims.md \
-  --force
+# 2. Claims — see prep-claims-review.md (draft → LLM → claims.md)
+jobfit prep-claims draft --role devops --force
 
 # Dry-run counts
 jobfit prep-context export --role devops --dry-run
@@ -187,7 +183,7 @@ jobfit prep-claims draft --role devops --dry-run
 
 When `--context` is omitted, `prep-claims draft` uses `prompts/prep/{role}/context.md` if the file exists; otherwise writes **claims only** (no Gaps section).
 
-Honest lines in the Gaps table are filled in Pass 2. Optional cache: `data/user/{role}/input/gap_lines.yaml`. Use `--merge` to refresh **Jobs/Count** without rewriting claim sections.
+Honest lines in the Gaps table: optional cache `data/user/{role}/input/gap_lines.yaml` (loaded in draft). Use `--merge` to refresh **Jobs/Count** without rewriting claim sections.
 
 **Layout:** default `jobfit/prep_context/layouts/{role}.yaml` (generic, skill-only). Optional override: copy [claims_layout.yaml.example](../data/user/devops/input/claims_layout.yaml.example) → `data/user/{role}/input/claims_layout.yaml` for CV-specific row matching (full replace).
 
@@ -207,7 +203,7 @@ Human fields in context are authoritative for prep intent.
 | Step | First time | Refresh (3–6 months) |
 |---|---|---|
 | Export + label starred | 1–2 h | 20–40 min |
-| claims.md | 1–2 h review | ~15 min re-draft + review if CV unchanged |
+| claims.draft.md + review | 1–2 h review | ~15 min re-draft + review if CV unchanged |
 | personas.md | 30 min | 15 min |
 | stories.md | 4–8 h | 2–4 h |
 | notes + drills | 3–5 h | 1–2 h |
@@ -216,6 +212,6 @@ Human fields in context are authoritative for prep intent.
 ## Related
 
 - Per-file guide: [prompts/prep/README.md](../prompts/prep/README.md)
-- **Claims draft review (Pass 1–4):** [prep-claims-review.md](prep-claims-review.md)
+- **Claims review (Step 1 LLM + Step 2 verify):** [prep-claims-review.md](prep-claims-review.md)
 - Field glossary: embedded in exported `context.md` (`## Field reference`)
 - Export implementation brief: [prompts/prep_context_export_agent.md](../prompts/prep_context_export_agent.md)

@@ -1,4 +1,4 @@
-# Optional gap lines cache for prep-claims draft (Pass 2 wording).
+# Optional gap lines cache for prep-claims draft (Gaps Do not / Say columns).
 # Copy to gap_lines.yaml in the same directory (gitignored via data/*/input/).
 #
 # Flat string = Say instead only. Mapping form sets both columns:

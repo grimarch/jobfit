@@ -8,7 +8,9 @@ from jobfit.prep_context.claims import (
     GapLineEntry,
     aggregate_gaps,
     build_skill_claims,
+    default_draft_path,
     default_gap_lines_path,
+    default_reviewed_path,
     extract_experience_bullets,
     load_gap_lines,
     parse_starred_blocks,
@@ -234,6 +236,11 @@ def test_render_claims_md_structured_sections():
     assert "## Quick reference" in md
     assert "## Do not claim (hard stop)" in md
     assert "jobfit:prep-claims:gaps" in md
+
+
+def test_default_claims_paths():
+    assert default_draft_path("devops") == Path("prompts/prep/devops/claims.draft.md")
+    assert default_reviewed_path("devops") == Path("prompts/prep/devops/claims.md")
 
 
 def test_merge_preserves_claims_and_gap_wording(tmp_path: Path):
