@@ -1,0 +1,20 @@
+# Optional gap lines cache for prep-claims draft (Pass 2 wording).
+# Copy to gap_lines.yaml in the same directory (gitignored via data/*/input/).
+#
+# Flat string = Say instead only. Mapping form sets both columns:
+#
+# AWS:
+#   do_not_claim: "Production AWS ownership"
+#   say_instead: "Primary cloud is GCP; IaC/CI/K8s patterns transfer — ramping AWS"
+
+AWS:
+  do_not_claim: "Production AWS ownership"
+  say_instead: "Primary cloud is GCP; IaC/CI/K8s patterns transfer — ramping AWS, not production owner yet"
+Azure:
+  do_not_claim: "Azure production"
+  say_instead: "No Azure production in CV; treat as learning scope, not a current claim"
+Jenkins:
+  say_instead: "GitLab CI owner — Jenkins mapping is straightforward"
+IAM:
+  do_not_claim: "AWS IAM policies in prod"
+  say_instead: "Vault RBAC + AppRole for apps/secrets — not AWS IAM policy depth"

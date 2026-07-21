@@ -75,7 +75,7 @@ It pulls listings from public APIs and ATS feeds, normalizes them into PostgreSQ
 - **CV generate** — LLM-tailored resume per vacancy, rendered to PDF
 - **Anschreiben** — DIN 5008 cover letters, tone adapted to company stage (startup / Mittelstand / enterprise)
 - **PII anonymization** — personal data stripped before LLM calls, restored locally after generation
-- **Prep context export** — `jobfit prep-context export` writes an anonymized Markdown brief of starred jobs (preferences, market gaps, overlap vs CV). Field glossary is embedded in the file (`## Field reference`); human notes in `prep_label` / `why_starred` survive re-export via merge on `refnr`
+- **Interview prep export** — `jobfit prep-context export` (starred handoff → `context.md`); **`jobfit prep-claims draft`** (draft `claims.md` from CV + shortlist gaps). Draft must be reviewed before interviews: [docs/prep-claims-review.md](docs/prep-claims-review.md). Overview: [docs/prep-workflow.md](docs/prep-workflow.md), [prompts/prep/README.md](prompts/prep/README.md)
 
 ### Platform
 - **CLI + Web API** — same logic via `jobfit` commands or FastAPI endpoints
@@ -313,6 +313,11 @@ jobfit serve sync             # full cycle for Docker
 jobfit cv extract <path>      # build cv_profile.json
 jobfit cv generate <refnr>    # tailored resume PDF
 jobfit cv anschreiben <refnr> # cover letter PDF (DIN 5008)
+
+# Interview prep handoff (see docs/prep-workflow.md)
+jobfit prep-context export --role devops --cv prompts/CV.md \
+  --out prompts/prep/devops/context.md
+jobfit prep-claims draft --role devops --cv prompts/CV.md --force
 ```
 
 All commands accept `--role` (default: `devops`). Handy flags: `--dry-run`, `--limit N`, `--audit`.

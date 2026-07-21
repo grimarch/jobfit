@@ -1,0 +1,139 @@
+# User-owned prep-claims layout (full replace of repo generic when copied to claims_layout.yaml).
+# Copy to claims_layout.yaml in this directory (gitignored). Evidence is matched from your CV at draft time.
+#
+# See jobfit/prep_context/layouts/devops.yaml for the generic devops layout (skill-only rows).
+
+slug: devops
+
+gaps_heading: "## Gaps vs prep shortlist (honest transfer lines)"
+gaps_intro: |
+  Union of `gaps_vs_cv` from starred jobs with prep_label ∈ fit / stretch / brand-only.
+  **Jobs** and **Count** refresh on `--merge`. Fill **Do not claim** and **Say instead** in Pass 2.
+
+sections:
+  - title: Core DevOps & platform
+    kind: claims
+    rows:
+      - label: "GitLab CI/CD — design, stages, deploy automation"
+        bullet_pattern: "LMS Platform|child.pipeline|Semgrep SAST"
+      - label: "GitLab CI/CD — build/test/release for packages"
+        bullet_pattern: "multi-distro|native package|artifact publishing"
+      - label: "Terraform / IaC — multi-stack, remote state"
+        bullet_pattern: "Terraform.*GCP|29 Terraform"
+        exclude_pattern: "HashiCorp Vault with RBAC"
+      - label: "Ansible — provisioning + fleet rollout"
+        bullet_pattern: "Ansible|Molecule"
+      - label: "Kubernetes / Helm — chart maintenance, upgrades"
+        bullet_pattern: "Helm|umbrella chart|Kubernetes platform"
+      - label: "Docker — containerized workloads"
+        bullet_pattern: "Docker Compose|Docker hosts"
+      - label: "HashiCorp Vault — secrets, RBAC, delivery pattern"
+        bullet_pattern: "HashiCorp Vault|AppRole|Vault Agent"
+        exclude_pattern: "Vault Cloud Infra.*Raft cluster"
+      - label: "DevSecOps / SAST / DAST"
+        skill: SAST/DAST
+      - label: "End-to-end platform ownership"
+        bullet_pattern: "JobFit|23 feeds|market research"
+
+  - title: Cloud & storage
+    kind: claims
+    rows:
+      - label: "GCP — production infrastructure"
+        skill: GCP
+      - label: "DigitalOcean — infrastructure"
+        bullet_pattern: "DigitalOcean|Vault Cloud Infra"
+      - label: "S3-style object storage / remote state"
+        bullet_pattern: "GCS bucket|remote state|S3"
+
+  - title: Observability
+    kind: claims
+    rows:
+      - label: "Prometheus + Grafana (+ Graphite) at scale"
+        bullet_pattern: "200\\+ hosts|Grafana dashboards|Prometheus and Graphite"
+      - label: "Monitoring-driven incident triage"
+        bullet_pattern: "faster incident triage|centralized health"
+
+  - title: Languages & backend (supporting platform work)
+    kind: claims
+    rows:
+      - label: "Python — production services & automation"
+        bullet_pattern: "FastAPI|GrimWaves|221 automated tests"
+      - label: "Bash / shell automation"
+        skill: Bash/Shell
+      - label: "SQL / PostgreSQL — app & platform data"
+        skill: PostgreSQL
+      - label: "Redis — caching & async"
+        skill: Redis
+      - label: "FastAPI / async APIs"
+        bullet_pattern: "FastAPI.*GrimWaves|7 REST endpoints"
+
+  - title: Linux, networking, operations
+    kind: claims
+    rows:
+      - label: "Linux (multi-distro) — prod operations"
+        bullet_pattern: "Gentoo|200\\+ hosts|fleet compliance"
+      - label: "Linux / RHEL — enterprise ops"
+        skill: RHEL/CentOS
+      - label: "Network troubleshooting"
+        bullet_pattern: "tcpdump|Wireshark|traceroute|nmap"
+      - label: "Log & performance analysis"
+        bullet_pattern: "access/error logs|dmesg|structured findings"
+      - label: "On-call / incident support (historical)"
+        bullet_pattern: "1st- and 2nd-level|SLA breach|SLA-aligned"
+      - label: "Technical documentation"
+        bullet_pattern: "technical documentation|Jira and Wiki"
+
+  - title: Security tools (listed in skills)
+    kind: claims
+    rows:
+      - label: "Semgrep (SAST)"
+        bullet_pattern: "Semgrep"
+      - label: "OWASP ZAP (DAST)"
+        bullet_pattern: "OWASP ZAP|ZAP baseline"
+      - label: "Trivy"
+        bullet_pattern: "Trivy"
+        optional: true
+
+  - title: Skills in CV header — limited evidence
+    kind: weak
+    rows:
+      - skill: GitHub Actions
+        note: 'Skills list only; pipeline bullets are GitLab CI — say "GitLab primary; GH Actions conceptually similar"'
+      - skill: Nginx
+        label: "Nginx / Traefik"
+        note: "Skills list only; no dedicated bullet — do not invent configs"
+      - skill: Traefik
+        skip_if: "Nginx / Traefik"
+      - skill: MySQL
+        note: "Middleware troubleshooting only — not DBA depth"
+
+  - title: Certifications & languages (factual only)
+    kind: certs
+    rows:
+      - label: "German (work)"
+        cv_pattern: "DTB|Deutsch-Test.*B2|Deutsch-Test für den Beruf"
+      - label: "English (work)"
+        cv_pattern: "English.*advanced|English - advanced"
+      - label: "RH135 (2016)"
+        cv_pattern: "RH135|Red Hat System Administration II"
+      - label: "CI/CD Engineering (Otus 2021)"
+        cv_pattern: "CI/CD Engineering.*Otus|Otus \\(2021\\)"
+        default_status: weak
+
+do_not_claim_hard_stop:
+  - "Production AWS / Azure / EKS experience (see Gaps table)"
+  - "Certs or tools from demo `data/user/{role}/input/CV_*.md` not in interview CV"
+  - "Go, Rust, or Java as primary stack unless CV bullet added"
+  - "GitHub Actions, Nginx, Traefik at GitLab depth without CV evidence"
+  - "Trivy in CI (skills line only unless bullet added)"
+  - '"Senior" or people-management scope — CV targets mid DevOps'
+
+quick_reference:
+  - theme: "CI/CD + security gates"
+  - theme: "IaC / cloud"
+  - theme: "Secrets"
+  - theme: "Observability"
+  - theme: "K8s"
+  - theme: "Ownership / product"
+  - theme: "Debugging / support"
+  - theme: "Mittelstand / DE"

@@ -240,3 +240,116 @@ def cmd_prep_context_export(
         dry_run=dry_run,
         no_merge=no_merge,
     )
+
+
+@cli.group(name="prep-claims")
+def prep_claims_group() -> None:
+    """Draft interview prep artifacts from CV and prep context export."""
+
+
+@prep_claims_group.command(name="draft")
+@role_option
+@click.option(
+    "--cv",
+    "cv_path",
+    default="prompts/CV.md",
+    metavar="PATH",
+    show_default=True,
+    help="Interview CV source of truth (claims are matched to experience bullets here).",
+)
+@click.option(
+    "--context",
+    "context_path",
+    default=None,
+    metavar="PATH",
+    help="Prep context export (default: prompts/prep/{role}/context.md if it exists).",
+)
+@click.option(
+    "--out",
+    "out_path",
+    default=None,
+    metavar="PATH",
+    help="Output claims markdown (default: prompts/prep/{role}/claims.md).",
+)
+@click.option(
+    "--prep-labels",
+    default="fit,stretch,brand-only",
+    show_default=True,
+    help="Comma-separated prep_label values used to aggregate gaps from context.",
+)
+@click.option(
+    "--gap-lines",
+    "gap_lines_path",
+    default=None,
+    metavar="PATH",
+    help="Optional YAML (skill → honest line). Default: data/user/{role}/input/gap_lines.yaml if present.",
+)
+@click.option(
+    "--merge",
+    is_flag=True,
+    help="Update Gaps table only (Jobs/Count); preserve claims structure and edits.",
+)
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Overwrite --out if it already exists.",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Print summary counts; write nothing.",
+)
+def cmd_prep_claims_draft(
+    role: str,
+    cv_path: str,
+    context_path: str | None,
+    out_path: str | None,
+    prep_labels: str,
+    gap_lines_path: str | None,
+    merge: bool,
+    force: bool,
+    dry_run: bool,
+) -> None:
+    """Draft Claim→Evidence markdown from CV bullets and optional context gaps.
+
+    Writes interview-oriented sections (devops layout) with evidence matched from CV.
+    With --context, adds a Gaps table from gaps_vs_cv on starred jobs whose
+    prep_label is in --prep-labels (default: fit, stretch, brand-only).
+
+    Use --merge to refresh gap Jobs/Count without overwriting claims tables.
+    Reviewed files merge automatically when --out exists and --force is not set.
+
+    Always review the draft before using in interviews.
+    """
+    from pathlib import Path
+
+    from jobfit.prep_context import claims as prep_claims
+
+    default_ctx = Path(f"prompts/prep/{role}/context.md")
+    if context_path:
+        ctx: Path | None = Path(context_path)
+    elif default_ctx.is_file():
+        ctx = default_ctx
+    else:
+        ctx = None
+
+    out = Path(out_path) if out_path else Path(f"prompts/prep/{role}/claims.md")
+    labels = frozenset(l.strip().lower() for l in prep_labels.split(",") if l.strip())
+
+    if gap_lines_path:
+        gap_lines: Path | None = Path(gap_lines_path)
+    else:
+        default_gap_lines = prep_claims.default_gap_lines_path(role)
+        gap_lines = default_gap_lines if default_gap_lines.is_file() else None
+
+    prep_claims.run(
+        role_slug=role,
+        cv_path=Path(cv_path),
+        context_path=ctx,
+        out_path=out,
+        gap_lines_path=gap_lines,
+        prep_labels=labels,
+        dry_run=dry_run,
+        force=force,
+        merge=merge,
+    )

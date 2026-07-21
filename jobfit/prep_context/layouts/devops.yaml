@@ -1,0 +1,113 @@
+# Generic devops prep-claims layout (repo default).
+# Skill rows use regex from jobfit/roles/devops.yaml; evidence comes from CV bullets at draft time.
+# Optional full override: data/user/devops/input/claims_layout.yaml (see claims_layout.yaml.example).
+
+slug: devops
+
+gaps_heading: "## Gaps vs prep shortlist (honest transfer lines)"
+gaps_intro: |
+  Union of `gaps_vs_cv` from starred jobs with prep_label ∈ fit / stretch / brand-only.
+  **Jobs** and **Count** refresh on `--merge`. Fill **Do not claim** and **Say instead** in Pass 2.
+
+sections:
+  - title: CI/CD & delivery
+    kind: claims
+    rows:
+      - label: GitLab CI/CD
+        skill: GitLab CI
+      - label: GitHub Actions
+        skill: GitHub Actions
+      - label: Jenkins
+        skill: Jenkins
+      - label: ArgoCD
+        skill: ArgoCD
+
+  - title: IaC & cloud
+    kind: claims
+    rows:
+      - label: Terraform
+        skill: Terraform
+      - label: Ansible
+        skill: Ansible
+      - label: GCP
+        skill: GCP
+      - label: AWS
+        skill: AWS
+      - label: Azure
+        skill: Azure
+
+  - title: Containers & orchestration
+    kind: claims
+    rows:
+      - label: Docker
+        skill: Docker
+      - label: Kubernetes
+        skill: Kubernetes
+      - label: Helm
+        skill: Helm
+
+  - title: Observability
+    kind: claims
+    rows:
+      - label: Prometheus
+        skill: Prometheus
+      - label: Grafana
+        skill: Grafana
+      - label: OpenTelemetry
+        skill: OpenTelemetry
+
+  - title: Security & secrets
+    kind: claims
+    rows:
+      - label: HashiCorp Vault
+        skill: HashiCorp Vault
+      - label: SAST / DAST
+        skill: SAST/DAST
+
+  - title: Languages & automation
+    kind: claims
+    rows:
+      - label: Python
+        skill: Python
+      - label: Bash / shell
+        skill: Bash/Shell
+      - label: Go
+        skill: Go/Golang
+
+  - title: Data stores
+    kind: claims
+    rows:
+      - label: PostgreSQL
+        skill: PostgreSQL
+      - label: Redis
+        skill: Redis
+      - label: MySQL
+        skill: MySQL
+
+  - title: Linux & operations
+    kind: claims
+    rows:
+      - label: Linux
+        skill: Linux
+      - label: RHEL / CentOS
+        skill: RHEL/CentOS
+
+  - title: Skills in CV — weak evidence
+    kind: weak
+    rows:
+      - skill: GitHub Actions
+      - skill: Nginx
+      - skill: Traefik
+
+do_not_claim_hard_stop:
+  - "Skills marked `weak` above unless you add a CV bullet"
+  - "Demo CV under `data/user/{role}/input/` not present in interview CV"
+  - "Cloud/tools listed in Gaps at production depth you cannot defend"
+
+quick_reference:
+  - theme: CI/CD
+  - theme: IaC / cloud
+  - theme: Observability
+  - theme: Security / secrets
+  - theme: K8s
+  - theme: On-call / operations
