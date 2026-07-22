@@ -107,7 +107,7 @@ Run when starting a new search wave or switching role focus.
 ### C. Claims (Phase 0c)
 
 8. `jobfit prep-claims draft --role ROLE --force` → `claims.draft.md`  
-9. Follow **[prep-claims-review.md](prep-claims-review.md)** (LLM → verify → `claims.md`)  
+9. Follow **[prep-claims-review.md](prep-claims-review.md)** — `draft` → `refine` → verify → `claims.md`  
 10. Gap refresh only: `jobfit prep-claims draft --role ROLE --merge`
 
 ### D. Practice material
@@ -173,8 +173,9 @@ jobfit prep-context export \
   --jd-excerpt-chars 400 \
   --market-scope sm
 
-# 2. Claims — see prep-claims-review.md (draft → LLM → claims.md)
+# 2. Claims — draft + refine → see prep-claims-review.md
 jobfit prep-claims draft --role devops --force
+jobfit prep-claims refine --role devops --force
 
 # Dry-run counts
 jobfit prep-context export --role devops --dry-run

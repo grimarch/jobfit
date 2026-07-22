@@ -27,14 +27,11 @@ Then continue with **Every run** below.
 docker compose exec app jobfit prep-claims draft --role devops --force
 # → prompts/prep/devops/claims.draft.md
 
-# 2 — LLM refine
-# New chat. Attach:
-#   prompts/CV.md
-#   prompts/prep/devops/claims.draft.md
-# Paste prompt body from:
-#   prompts/prep/devops/claims_review_prompt.md  (below the --- line)
-# Optional style only: prompts/prep/devops/claims_llm.md
-# Save reply → prompts/prep/devops/claims.llm.md
+# 2 — LLM refine (default)
+docker compose exec app jobfit prep-claims refine --role devops --force
+# → prompts/prep/devops/claims.llm.md
+
+# 2 — manual fallback: chat + prompts/prep/devops/claims_review_prompt.md
 
 # 3 — you verify (~10 min): CV.md + claims.llm.md
 #   • 3–5 random ok rows match CV
@@ -83,7 +80,11 @@ Do not use stories/mock until `claims.md` is **Reviewed**.
 
 **CLI** (`prep-claims draft`): sections from layout YAML, regex-matched Evidence, Gaps Jobs/Count (+ Do not/Say from `gap_lines.yaml` if present).
 
-**LLM** (Step 2): fix wrong bullets, split Cloud rows, restore truncated metrics, `[WORK_COMP_N]`, Quick reference, Do not claim, ok/weak. Must not change Gaps Jobs/Count or invent facts.
+**LLM** (`prep-claims refine`): fix wrong bullets, split Cloud rows, restore truncated metrics, `[WORK_COMP_N]`, Quick reference, Do not claim, ok/weak. Must not change Gaps Jobs/Count or invent facts.
+
+Env: `PREP_CLAIMS_PROVIDER`, `PREP_CLAIMS_API_KEY`, `PREP_CLAIMS_MODEL` (default haiku when unset). Falls back to `LLM_*`.
+
+Debug: `jobfit prep-claims refine --role devops --print-prompt` or `--dry-run`.
 
 </details>
 
@@ -111,6 +112,13 @@ Loaded automatically when present (`JOBFIT_USER_DATA_DIR` / Docker secrets path)
 - [ ] Do not claim / Gaps lines speakable and honest
 - [ ] No AWS/Azure as owned production experience
 - [ ] LLM verify notes resolved or reverted
+
+</details>
+
+<details>
+<summary><strong>Manual LLM fallback</strong></summary>
+
+If `prep-claims refine` is unavailable or output is poor: new chat, attach `CV.md` + `claims.draft.md`, paste prompt from `claims_review_prompt.md` (below `---`), save as `claims.llm.md`.
 
 </details>
 

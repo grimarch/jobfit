@@ -12,6 +12,7 @@ from jobfit.prep_context.claims import (
     default_gap_lines_path,
     default_reviewed_path,
     extract_experience_bullets,
+    extract_llm_input,
     load_gap_lines,
     parse_starred_blocks,
     render_claims_md,
@@ -236,6 +237,11 @@ def test_render_claims_md_structured_sections():
     assert "## Quick reference" in md
     assert "## Do not claim (hard stop)" in md
     assert "jobfit:prep-claims:gaps" in md
+    assert "jobfit:prep-claims:llm-input" in md
+    assert "## How this file is used" in md
+    llm_body = extract_llm_input(md)
+    assert "## CI/CD & delivery" in llm_body
+    assert "How this file is used" not in llm_body
 
 
 def test_default_claims_paths():

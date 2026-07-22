@@ -12,13 +12,15 @@ from typing import Any
 import yaml
 
 from jobfit import config
-from jobfit.dashboards.scoring import skills_from_text
 from jobfit.prep_context.overlap import compute_cv_skills
 from jobfit.roles import ROLES, Role
 
 _GAP_LINES_FILE = "gap_lines.yaml"
 _DRAFT_CLAIMS_FILE = "claims.draft.md"
 _REVIEWED_CLAIMS_FILE = "claims.md"
+_LLM_INPUT_BEGIN = "<!-- jobfit:prep-claims:llm-input -->"
+_LLM_INPUT_END = "<!-- /jobfit:prep-claims:llm-input -->"
+_DRAFT_FOOTER_HEADING = "## How this file is used"
 
 _BLOCK_SPLIT_RE = re.compile(r"^### S\d+", re.MULTILINE)
 _FIELD_RE = re.compile(r"^- ([a-z_]+):[ \t]*(.*)", re.MULTILINE)
@@ -42,6 +44,18 @@ def default_draft_path(role_slug: str) -> Path:
 def default_reviewed_path(role_slug: str) -> Path:
     """Interview SoT after human verify (gaps merge target)."""
     return Path(f"prompts/prep/{role_slug}") / _REVIEWED_CLAIMS_FILE
+
+
+def extract_llm_input(md_text: str) -> str:
+    """Return claims body for LLM refine (between llm-input markers, excluding human footer)."""
+    if _LLM_INPUT_BEGIN in md_text and _LLM_INPUT_END in md_text:
+        start = md_text.index(_LLM_INPUT_BEGIN) + len(_LLM_INPUT_BEGIN)
+        end = md_text.index(_LLM_INPUT_END)
+        return md_text[start:end].strip()
+    idx = md_text.find(_DRAFT_FOOTER_HEADING)
+    if idx != -1:
+        return md_text[:idx].strip()
+    return md_text.strip()
 
 
 def load_gap_lines(path: Path | None) -> dict[str, GapLineEntry]:
@@ -340,23 +354,27 @@ def render_claims_md(
             "",
             "---",
             "",
+            _LLM_INPUT_BEGIN,
+            "",
         ]
     )
 
+    body_lines: list[str] = []
+
     if layout is not None:
         for section in layout.sections:
-            lines.append(f"## {section.title}")
-            lines.append("")
-            lines.extend(_render_claims_table(section.rows, kind=section.kind))
-            lines.extend(["", "---", ""])
+            body_lines.append(f"## {section.title}")
+            body_lines.append("")
+            body_lines.extend(_render_claims_table(section.rows, kind=section.kind))
+            body_lines.extend(["", "---", ""])
     else:
-        lines.extend(["## Claims (from CV)", ""])
+        body_lines.extend(["## Claims (from CV)", ""])
         ok_claims = [c for c in claims if c.status == "ok"]
         weak_claims = [c for c in claims if c.status == "weak"]
-        lines.extend(_render_claims_table(ok_claims, kind="claims"))
+        body_lines.extend(_render_claims_table(ok_claims, kind="claims"))
         if weak_claims:
-            lines.extend(["", "## Skills in CV — weak evidence", ""])
-            lines.extend(_render_claims_table(weak_claims, kind="weak"))
+            body_lines.extend(["", "## Skills in CV — weak evidence", ""])
+            body_lines.extend(_render_claims_table(weak_claims, kind="weak"))
 
     if gaps:
         heading = layout.gaps_heading if layout else "## Gaps vs prep shortlist (honest transfer lines)"
@@ -365,7 +383,7 @@ def render_claims_md(
             if layout
             else "Union of gaps_vs_cv from fit/stretch/brand-only starred jobs."
         )
-        lines.append(
+        body_lines.append(
             render_gaps_block(
                 layout_heading=heading,
                 layout_intro=intro,
@@ -373,7 +391,7 @@ def render_claims_md(
                 gap_lines_path=gap_lines_path if gap_lines_path and gap_lines_path.is_file() else None,
             )
         )
-        lines.append("")
+        body_lines.append("")
 
     hard_stop = (
         layout.do_not_claim_hard_stop
@@ -384,23 +402,26 @@ def render_claims_md(
             "Cloud platforms listed in Gaps at production depth",
         ]
     )
-    lines.extend(["---", "", "## Do not claim (hard stop)", ""])
+    body_lines.extend(["---", "", "## Do not claim (hard stop)", ""])
     for item in hard_stop:
-        lines.append(f"- {item.format(role=role_slug)}")
+        body_lines.append(f"- {item.format(role=role_slug)}")
 
     if layout and layout.quick_reference:
-        lines.extend(["", "---", "", "## Quick reference — best bullets by interview theme", ""])
-        lines.append("| Theme | Lead bullet |")
-        lines.append("|---|---|")
+        body_lines.extend(["", "---", "", "## Quick reference — best bullets by interview theme", ""])
+        body_lines.append("| Theme | Lead bullet |")
+        body_lines.append("|---|---|")
         for theme, hint in layout.quick_reference:
-            lines.append(f"| {theme} | {_md_cell(hint)} |")
+            body_lines.append(f"| {theme} | {_md_cell(hint)} |")
 
+    lines.extend(body_lines)
     lines.extend(
         [
             "",
+            _LLM_INPUT_END,
+            "",
             "---",
             "",
-            "## How this file is used",
+            _DRAFT_FOOTER_HEADING,
             "",
             "1. **Any interview** — pick `ok` rows; do not invent beyond Evidence.",
             "2. **Specific application** — read that job's `gaps_vs_cv` in `context.md`.",
@@ -416,6 +437,12 @@ def render_claims_md(
             "",
             "```bash",
             f"jobfit prep-claims draft --role {role_slug} --force",
+            "```",
+            "",
+            "LLM refine (requires PREP_CLAIMS_* or LLM_* API key):",
+            "",
+            "```bash",
+            f"jobfit prep-claims refine --role {role_slug} --force",
             "```",
             "",
             "After LLM + verify, promote to SoT:",

@@ -358,3 +358,118 @@ def cmd_prep_claims_draft(
         force=force,
         merge=merge,
     )
+
+
+@prep_claims_group.command(name="refine")
+@role_option
+@click.option(
+    "--cv",
+    "cv_path",
+    default="prompts/CV.md",
+    metavar="PATH",
+    show_default=True,
+    help="Interview CV source of truth.",
+)
+@click.option(
+    "--in",
+    "draft_path",
+    default=None,
+    metavar="PATH",
+    help="Machine draft input (default: prompts/prep/{role}/claims.draft.md).",
+)
+@click.option(
+    "--out",
+    "out_path",
+    default=None,
+    metavar="PATH",
+    help="LLM refine output (default: prompts/prep/{role}/claims.llm.md).",
+)
+@click.option(
+    "--prompt",
+    "prompt_path",
+    default=None,
+    metavar="PATH",
+    help="System prompt markdown (default: prompts/prep/{role}/claims_review_prompt.md).",
+)
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Overwrite --out if it already exists.",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Validate inputs and log prompt sizes; no API call.",
+)
+@click.option(
+    "--print-prompt",
+    "print_prompt",
+    is_flag=True,
+    help="Print system + user prompts and exit (no API call).",
+)
+def cmd_prep_claims_refine(
+    role: str,
+    cv_path: str,
+    draft_path: str | None,
+    out_path: str | None,
+    prompt_path: str | None,
+    force: bool,
+    dry_run: bool,
+    print_prompt: bool,
+) -> None:
+    """Refine claims.draft.md with LLM → claims.llm.md (human verify still required).
+
+    Uses PREP_CLAIMS_* env vars (provider, API key, model); falls back to LLM_*.
+    Default model when unset: claude-haiku-4-5 (via jobfit.llm.resolve_model).
+
+    Run prep-claims draft first. Manual chat fallback: claims_review_prompt.md.
+    """
+    from pathlib import Path
+
+    from jobfit.llm import resolve_model, resolve_provider
+    from jobfit.prep_context import claims_refine
+    from jobfit.prompt_display import print_llm_prompt
+
+    cv = Path(cv_path)
+    draft = Path(draft_path) if draft_path else claims_refine.default_draft_input_path(role)
+    out = Path(out_path) if out_path else claims_refine.default_llm_path(role)
+    prompt = Path(prompt_path) if prompt_path else claims_refine.default_prompt_path(role)
+
+    try:
+        system, user = claims_refine.prepare_prompts(
+            cv_path=cv,
+            draft_path=draft,
+            prompt_path=prompt,
+        )
+    except (FileNotFoundError, ValueError) as e:
+        from loguru import logger
+
+        logger.error(str(e))
+        raise SystemExit(1) from e
+
+    if print_prompt:
+        print_llm_prompt(
+            system=system,
+            user=user,
+            refnr=role,
+            doc_label=claims_refine.PROMPT_DOC_LABEL,
+            model=resolve_model(claims_refine.PROMPT_MODEL_VAR),
+            provider=resolve_provider(claims_refine.PROMPT_COMMAND_PREFIX),
+        )
+        return
+
+    try:
+        claims_refine.run(
+            role_slug=role,
+            cv_path=cv,
+            draft_path=draft,
+            out_path=out,
+            prompt_path=prompt,
+            dry_run=dry_run,
+            force=force,
+        )
+    except (FileExistsError, FileNotFoundError, RuntimeError, ValueError) as e:
+        from loguru import logger
+
+        logger.error(str(e))
+        raise SystemExit(1) from e

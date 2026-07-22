@@ -75,7 +75,7 @@ It pulls listings from public APIs and ATS feeds, normalizes them into PostgreSQ
 - **CV generate** — LLM-tailored resume per vacancy, rendered to PDF
 - **Anschreiben** — DIN 5008 cover letters, tone adapted to company stage (startup / Mittelstand / enterprise)
 - **PII anonymization** — personal data stripped before LLM calls, restored locally after generation
-- **Interview prep** — `prep-context export` + `prep-claims draft`; claims cheat sheet: [docs/prep-claims-review.md](docs/prep-claims-review.md)
+- **Interview prep** — `prep-context export`, `prep-claims draft` + `prep-claims refine`; [docs/prep-claims-review.md](docs/prep-claims-review.md)
 
 ### Platform
 - **CLI + Web API** — same logic via `jobfit` commands or FastAPI endpoints
