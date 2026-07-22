@@ -130,6 +130,34 @@ def test_build_layout_sections_user_tuned_vault_match():
     assert "AppRole" in vault_rows[0].evidence or "RBAC" in vault_rows[0].evidence
 
 
+def test_build_layout_sections_all_bullets_and_reuse():
+    example = Path("data/user/devops/input/claims_layout.yaml.example")
+    if not example.is_file():
+        pytest.skip("claims_layout.yaml.example not present")
+    cv = Path("prompts/CV.md")
+    if not cv.is_file():
+        pytest.skip("prompts/CV.md not present")
+    cv_text = cv.read_text(encoding="utf-8")
+    layout = build_layout_sections(cv_text, "devops", layout_file=example)
+    assert layout is not None
+    lang = next(s for s in layout.sections if "Languages" in s.title)
+    pg = next(r for r in lang.rows if "PostgreSQL" in r.label)
+    assert pg.status == "ok"
+    assert "JobFit" in pg.evidence
+    assert "externalizing PostgreSQL" in pg.evidence
+    fastapi = next(r for r in lang.rows if "FastAPI" in r.label)
+    assert fastapi.status == "ok"
+    assert "GrimWaves" in fastapi.evidence
+    assert "JobFit" in fastapi.evidence
+    sec = next(s for s in layout.sections if s.title.startswith("Security tools"))
+    semgrep = next(r for r in sec.rows if "Semgrep" in r.label)
+    zap = next(r for r in sec.rows if "ZAP" in r.label)
+    assert semgrep.status == "ok"
+    assert zap.status == "ok"
+    assert "Semgrep" in semgrep.evidence
+    assert "OWASP ZAP" in zap.evidence
+
+
 def test_resolve_layout_path_prefers_user(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     user_dir = tmp_path / "devops" / "input"
     user_dir.mkdir(parents=True)

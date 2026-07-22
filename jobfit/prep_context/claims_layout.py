@@ -140,12 +140,13 @@ def _pick_bullet(
     *,
     exclude_pattern: str | None = None,
     used: set[int] | None = None,
+    reuse_bullet: bool = False,
 ) -> tuple[int, str] | None:
     pat = re.compile(pattern, re.IGNORECASE)
     ex = re.compile(exclude_pattern, re.IGNORECASE) if exclude_pattern else None
     best: tuple[tuple[int, int], int, str] | None = None
     for i, bullet in enumerate(bullets):
-        if used is not None and i in used:
+        if used is not None and i in used and not reuse_bullet:
             continue
         if not pat.search(bullet):
             continue
@@ -157,6 +158,26 @@ def _pick_bullet(
     if best is None:
         return None
     return best[1], best[2]
+
+
+def _collect_bullets(
+    bullets: list[str],
+    pattern: str,
+    *,
+    exclude_pattern: str | None = None,
+) -> list[tuple[int, str]]:
+    """All CV bullets matching pattern, best-ranked first."""
+    pat = re.compile(pattern, re.IGNORECASE)
+    ex = re.compile(exclude_pattern, re.IGNORECASE) if exclude_pattern else None
+    matches: list[tuple[int, str]] = []
+    for i, bullet in enumerate(bullets):
+        if not pat.search(bullet):
+            continue
+        if ex is not None and ex.search(bullet):
+            continue
+        matches.append((i, bullet))
+    matches.sort(key=lambda item: _bullet_rank(item[1]), reverse=True)
+    return matches
 
 
 def _truncate(text: str, limit: int = 280) -> str:
@@ -206,22 +227,42 @@ def _match_row(
             evidence = "—"
             status = "weak"
     elif bullet_pattern:
-        picked = _pick_bullet(
-            bullets,
-            str(bullet_pattern),
-            exclude_pattern=row_spec.get("exclude_pattern"),
-            used=used,
-        )
-        if picked:
-            idx, bullet = picked
-            used.add(idx)
-            evidence = _truncate(bullet)
-            status = "ok"
-        elif row_spec.get("optional"):
-            return None
+        pattern_str = str(bullet_pattern)
+        if row_spec.get("all_bullets"):
+            matches = _collect_bullets(
+                bullets,
+                pattern_str,
+                exclude_pattern=row_spec.get("exclude_pattern"),
+            )
+            if matches:
+                evidence = "; ".join(_truncate(bullet, limit=200) for _, bullet in matches)
+                for idx, _ in matches:
+                    used.add(idx)
+                status = "ok"
+            elif row_spec.get("optional"):
+                return None
+            else:
+                evidence = "—"
+                status = "weak"
         else:
-            evidence = "—"
-            status = "weak"
+            picked = _pick_bullet(
+                bullets,
+                pattern_str,
+                exclude_pattern=row_spec.get("exclude_pattern"),
+                used=used,
+                reuse_bullet=bool(row_spec.get("reuse_bullet")),
+            )
+            if picked:
+                idx, bullet = picked
+                if not row_spec.get("reuse_bullet"):
+                    used.add(idx)
+                evidence = _truncate(bullet)
+                status = "ok"
+            elif row_spec.get("optional"):
+                return None
+            else:
+                evidence = "—"
+                status = "weak"
     elif skill:
         patterns = _skill_patterns(role)
         pat_str = patterns.get(str(skill))
@@ -229,19 +270,29 @@ def _match_row(
             evidence = "—"
             status = "weak"
         else:
-            picked = _pick_bullet(bullets, pat_str, used=used)
-            if picked:
-                idx, bullet = picked
-                used.add(idx)
-                evidence = _truncate(bullet)
+            if row_spec.get("all_bullets"):
+                matches = _collect_bullets(bullets, pat_str)
+            else:
+                matches = []
+            if row_spec.get("all_bullets") and matches:
+                evidence = "; ".join(_truncate(bullet, limit=200) for _, bullet in matches)
+                for idx, _ in matches:
+                    used.add(idx)
                 status = "ok"
             else:
-                note = row_spec.get("note")
-                if note:
-                    evidence = str(note)
+                picked = _pick_bullet(bullets, pat_str, used=used)
+                if picked:
+                    idx, bullet = picked
+                    used.add(idx)
+                    evidence = _truncate(bullet)
+                    status = "ok"
                 else:
-                    evidence = "Listed in CV skills section — no dedicated experience bullet matched"
-                status = "weak"
+                    note = row_spec.get("note")
+                    if note:
+                        evidence = str(note)
+                    else:
+                        evidence = "Listed in CV skills section — no dedicated experience bullet matched"
+                    status = "weak"
     else:
         return None
 

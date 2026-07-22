@@ -44,7 +44,7 @@ cp prompts/prep/devops/claims.llm.md prompts/prep/devops/claims.md
 # Set header: **Reviewed:** YYYY-MM-DD · CV: `prompts/CV.md` · context: `prompts/prep/devops/context.md`
 ```
 
-**Done when** `claims.md` says **Reviewed** and you'd defend every `ok` row. Then → personas → stories → mock.
+**Done when** `claims.md` says **Reviewed** and you'd defend every `ok` row. Then → prep roles (`personas.md`) → stories → mock.
 
 ### Later (maintenance only)
 

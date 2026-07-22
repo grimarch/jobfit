@@ -40,7 +40,7 @@ prompts/
       claims.draft.md            # Phase 0c: CLI machine draft (default prep-claims output)
       claims.llm.md              # optional: LLM-refined draft for review
       claims.md                  # Phase 0c: reviewed SoT after human verify
-      personas.md                # Phase 1: 3 practice JDs (S1, S4, …)
+      personas.md                # Phase 1: prep roles — 3 mock scenarios (S1, S4, …)
       stories.md                 # Phase 2: STAR-style answers DE+EN
       notes.md                   # Phase 3–4: tech depth + DE funnel (pitch, Gehalt)
       drills.md                  # Phase 5: written exercises before mock
@@ -73,7 +73,7 @@ Re-export **merges** your `prep_label` / `why_starred` by `refnr` (unless `--no-
 | Claim → evidence draft | `jobfit prep-claims draft` | `claims.draft.md` — structured sections, CV-matched evidence | — |
 | Gaps from shortlist | same + `--context`; refresh counts on SoT | Gaps table (Jobs/Count) on `claims.md` via `--merge` | Step 2 verify; `gap_lines.yaml` |
 | Story draft | agent / manual | `stories.md` | Required |
-| Persona checklist | manual | `personas.md` | Confirm S* choice |
+| Prep roles checklist | manual | `personas.md` | Confirm S* choice |
 
 ### Tier 3 — manual only
 
@@ -112,14 +112,14 @@ Run when starting a new search wave or switching role focus.
 
 ### D. Practice material
 
-10. `personas.md` — pick 3 from fit/stretch (different archetypes)
+10. `personas.md` — 3 prep roles from fit/stretch (different archetypes)
 11. `stories.md` — 8–10 stories from claims (DE for HR, EN for tech)
 12. `notes.md` — must-defend topics + recurring starred gaps + 2-min pitch
-13. `drills.md` — 2 design + 2 debug written answers per primary persona
+13. `drills.md` — 2 design + 2 debug written answers for primary prep role (S1)
 
 ### E. Mock
 
-14. Live mock on primary `fit` persona (e.g. S1) only after drills
+14. Live mock on primary prep role (`fit`, e.g. S1) only after drills
 15. Update stories/notes from mock feedback
 
 ## Phase map (artifacts)
@@ -129,7 +129,7 @@ Run when starting a new search wave or switching role focus.
 | 0a | `context.md` | export done |
 | 0b | human fields in `context.md` | all starred labeled |
 | 0c | `claims.md` | **Reviewed** — [prep-claims-review.md](prep-claims-review.md) |
-| 1 | `personas.md` | 3 JDs chosen + anchors from claims |
+| 1 | `personas.md` | 3 prep roles + anchors from claims |
 | 2 | `stories.md` | 8–10 stories DE+EN |
 | 3 | `notes.md` (depth) | core stack + starred gaps covered |
 | 4 | `notes.md` (funnel) | pitch + Gehalt + Fragen an uns |
@@ -140,7 +140,7 @@ Run when starting a new search wave or switching role focus.
 
 - [ ] `context.md` current; starred tagged fit/stretch/skip
 - [ ] `claims.md` complete — CV.md only, no demo CV leakage
-- [ ] 3 personas with anonymized excerpts (in context or personas.md)
+- [ ] 3 prep roles with anonymized excerpts (in context or personas.md)
 - [ ] 8 STAR-style stories DE+EN
 - [ ] Pitch + salary/availability phrasing
 - [ ] Deep dive on 5 core topics + recurring gaps from fit/stretch starred
@@ -155,7 +155,7 @@ Full table: [prompts/prep/README.md](../prompts/prep/README.md).
 |---|---|---|
 | `context.md` | Which starred jobs, market gaps, overlap **per job**? | `prep-context export` |
 | `claims.md` | What can I **prove** from CV? | [prep-claims-review.md](prep-claims-review.md) |
-| `personas.md` | Which 3 JDs do I practice on? | — (manual) |
+| `personas.md` | Which 3 jobs / prep roles do I practice on? | — (manual) |
 | `stories.md` | How do I tell the story in an interview? | — (manual / agent) |
 | `notes.md` | Depth + HR pitch + Gehalt | — (manual) |
 | `drills.md` | Written rehearsal before mock | — (manual) |
