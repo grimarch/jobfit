@@ -473,3 +473,46 @@ def cmd_prep_claims_refine(
 
         logger.error(str(e))
         raise SystemExit(1) from e
+
+
+@cli.group(name="llm")
+def llm_group() -> None:
+    """LLM provider utilities."""
+
+
+@llm_group.command(name="ping")
+@click.option(
+    "--prefix",
+    default=None,
+    metavar="PREFIX",
+    help="Env var prefix for per-command provider (e.g. PREP_CLAIMS, CV). Default: global LLM_* vars.",
+)
+def cmd_llm_ping(prefix: str | None) -> None:
+    """Check LLM connectivity and API key by listing available models (no tokens consumed)."""
+    from jobfit.llm import ping, resolve_base_url, resolve_model, resolve_provider
+
+    provider = resolve_provider(prefix)
+    base_url = resolve_base_url(prefix)
+    model_var = f"{prefix}_MODEL" if prefix else "LLM_MODEL"
+    try:
+        model = resolve_model(model_var)
+    except RuntimeError:
+        model = "(not configured)"
+
+    prefix_label = f"{prefix}_* → " if prefix else ""
+    click.echo(f"provider:  {prefix_label}{provider}")
+    if provider == "openai-compat" and base_url:
+        click.echo(f"base_url:  {base_url}")
+    click.echo(f"model:     {model}")
+
+    try:
+        models = ping(prefix)
+    except Exception as e:
+        click.echo(f"status:    ERROR — {e}", err=True)
+        raise SystemExit(1) from e
+
+    click.echo(f"status:    OK  ({len(models)} models available)")
+    for m in models[:5]:
+        click.echo(f"           · {m}")
+    if len(models) > 5:
+        click.echo(f"           … and {len(models) - 5} more")

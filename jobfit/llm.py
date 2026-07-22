@@ -116,6 +116,28 @@ def _resolve_fallback_base_url(command_prefix: str | None) -> str:
     return _first_env(names) or os.environ.get("LLM_FALLBACK_BASE_URL", "")
 
 
+def ping(command_prefix: str | None = None) -> list[str]:
+    """Verify connectivity and API key by listing available models (no tokens consumed)."""
+    provider = resolve_provider(command_prefix)
+    api_key = resolve_key(command_prefix=command_prefix)
+    base_url = resolve_base_url(command_prefix)
+
+    if provider == "anthropic":
+        client = anthropic.Anthropic(api_key=api_key)
+        return [m.id for m in client.models.list().data]
+
+    if provider == "openai-compat":
+        if not base_url:
+            raise RuntimeError(
+                "LLM_BASE_URL not set. Required when LLM_PROVIDER=openai-compat."
+            )
+        import openai
+        client = openai.OpenAI(api_key=api_key, base_url=base_url, max_retries=0)
+        return [m.id for m in client.models.list().data]
+
+    raise RuntimeError(f"Unknown provider: {provider!r}")
+
+
 def complete(
     messages: list[dict[str, str]],
     *,
