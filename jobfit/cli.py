@@ -209,6 +209,12 @@ def prep_context_group() -> None:
     is_flag=True,
     help="Overwrite --out without merging existing why_starred / prep_label values.",
 )
+@click.option(
+    "--include-company",
+    "include_company",
+    is_flag=True,
+    help="Write employer name per starred job (- company:); jd_excerpt stays redacted.",
+)
 def cmd_prep_context_export(
     role: str,
     cv_path: str | None,
@@ -218,11 +224,13 @@ def cmd_prep_context_export(
     include_closed: bool,
     dry_run: bool,
     no_merge: bool,
+    include_company: bool,
 ) -> None:
     """Export an anonymized Markdown prep context for interview preparation.
 
     Starred jobs use the same sort_key as the targets Starred tab (S1 = top UI row).
-    Company names are redacted in JD excerpts; match rows via order, title/score, or refnr.
+    By default company names are omitted and redacted in JD excerpts; use
+    --include-company for a - company: line per job (local navigation only).
 
     If --out already exists, human-edited why_starred and prep_label values are
     merged back by refnr. Use --no-merge to skip this and overwrite from scratch.
@@ -239,6 +247,7 @@ def cmd_prep_context_export(
         include_closed=include_closed,
         dry_run=dry_run,
         no_merge=no_merge,
+        include_company=include_company,
     )
 
 

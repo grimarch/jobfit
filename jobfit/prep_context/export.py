@@ -158,11 +158,14 @@ def _build_job_record(
         job_row.firma or "",
     )
 
+    firma = cls_row.firma or job_row.firma or ""
+
     return {
         "id": "",  # assigned after sort_key ordering
         "refnr": cls_row.refnr,
         "starred_at": _format_starred_at(cls_row.starred_at),
-        "_sort_firma": cls_row.firma or job_row.firma or "",
+        "_sort_firma": firma,
+        "company": firma,
         "title": cls_row.titel or job_row.titel or "",
         "company_type": meta.get("company_type"),
         "company_stage": meta.get("company_stage"),
@@ -197,6 +200,7 @@ def run(
     include_closed: bool,
     dry_run: bool,
     no_merge: bool = False,
+    include_company: bool = False,
 ) -> None:
     """Build and write the anonymized Markdown prep context file.
 
@@ -209,6 +213,7 @@ def run(
         include_closed:   Include starred jobs whose closed_at is set.
         dry_run:          Print summary counts without writing files.
         no_merge:         If True, ignore existing out_path even if it exists.
+        include_company:  If True, write employer name per job; jd_excerpt stays redacted.
     """
     role = ROLES[role_slug]
     config = load_scoring_config(role_slug)
@@ -250,6 +255,7 @@ def run(
         "preferences": _build_preferences(role_slug),
         "market_snapshot": market,
         "starred": starred_records,
+        "include_company": include_company,
     }
 
     logger.info(

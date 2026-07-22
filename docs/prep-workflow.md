@@ -64,6 +64,7 @@ prompts/
 
 Export includes: preferences, market snapshot, starred jobs (overlap/gaps vs CV),
 `prep_heuristic`, `agency_suspect`, redacted JD excerpts, embedded field glossary.
+Optional `--include-company` adds `- company:` per job (from DB); `jd_excerpt` stays redacted.
 Re-export **merges** your `prep_label` / `why_starred` by `refnr` (unless `--no-merge`).
 
 ### Tier 2 — semi-automated (JobFit CLI + review)
@@ -171,7 +172,8 @@ jobfit prep-context export \
   --cv prompts/CV.md \
   --out prompts/prep/devops/context.md \
   --jd-excerpt-chars 400 \
-  --market-scope sm
+  --market-scope sm \
+  --include-company
 
 # 2. Claims — draft + refine → see prep-claims-review.md
 jobfit prep-claims draft --role devops --force

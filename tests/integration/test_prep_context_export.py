@@ -252,3 +252,71 @@ def test_export_dry_run_writes_nothing(cv_file: Path, out_md: Path) -> None:
     )
 
     assert not out_md.exists(), "--dry-run must not write any file"
+
+
+def _get_starred_firma(role: str = _ROLE) -> str | None:
+    """Return firma for the first starred job for *role*, or None."""
+    from jobfit.db import get_session
+    from jobfit.db.models import Classification as ClsModel, Job
+
+    with get_session() as session:
+        row = (
+            session.query(ClsModel, Job)
+            .join(Job, ClsModel.refnr == Job.refnr)
+            .filter(
+                ClsModel.role == role,
+                ClsModel.starred_at.isnot(None),
+            )
+            .first()
+        )
+    if not row:
+        return None
+    cls_row, job_row = row
+    return cls_row.firma or job_row.firma or None
+
+
+def test_export_omits_company_by_default(cv_file: Path, out_md: Path) -> None:
+    """Default export does not write - company: lines."""
+    starred_refnr = _get_starred_refnr()
+    if starred_refnr is None:
+        pytest.skip("No starred jobs for role 'devops' in test DB")
+
+    from jobfit.prep_context import export as prep_export
+
+    prep_export.run(
+        role_slug=_ROLE,
+        cv_path=cv_file,
+        out_path=out_md,
+        jd_excerpt_chars=200,
+        market_scope="sm",
+        include_closed=True,
+        dry_run=False,
+    )
+
+    content = out_md.read_text(encoding="utf-8")
+    assert "- company:" not in content
+
+
+def test_export_include_company_writes_firma(cv_file: Path, out_md: Path) -> None:
+    """--include-company writes employer name from DB; jd_excerpt stays redacted."""
+    starred_refnr = _get_starred_refnr()
+    firma = _get_starred_firma()
+    if starred_refnr is None or not firma:
+        pytest.skip("No starred job with firma for role 'devops' in test DB")
+
+    from jobfit.prep_context import export as prep_export
+
+    prep_export.run(
+        role_slug=_ROLE,
+        cv_path=cv_file,
+        out_path=out_md,
+        jd_excerpt_chars=200,
+        market_scope="sm",
+        include_closed=True,
+        dry_run=False,
+        include_company=True,
+    )
+
+    content = out_md.read_text(encoding="utf-8")
+    assert f"- company: {firma}" in content
+    assert "**company**" in content

@@ -224,3 +224,36 @@ def test_job_md_prep_label_with_value():
 def test_job_md_why_starred_with_value():
     out = render_job_md({**_JOB, "why_starred": "great remote culture"}, 1)
     assert "- why_starred: great remote culture" in out
+
+
+def test_job_md_omits_company_by_default():
+    job = {**_JOB, "company": "Acme GmbH"}
+    out = render_job_md(job, 1)
+    assert "- company:" not in out
+
+
+def test_job_md_renders_company_when_flag_set():
+    job = {**_JOB, "company": "Acme GmbH"}
+    out = render_job_md(job, 1, include_company=True)
+    assert "- company: Acme GmbH" in out
+    assert out.index("- title:") < out.index("- company:")
+
+
+def test_job_md_company_dash_when_empty_and_flag_set():
+    job = {**_JOB, "company": ""}
+    out = render_job_md(job, 1, include_company=True)
+    assert "- company: -" in out
+
+
+def test_md_field_reference_omits_company_by_default():
+    out = render_md(_DATA)
+    ref = out[out.index("## Field reference"):]
+    assert "**company**" not in ref
+
+
+def test_md_field_reference_includes_company_when_flag_set():
+    data = {**_DATA, "include_company": True}
+    out = render_md(data)
+    ref = out[out.index("## Field reference"):]
+    assert "**company**" in ref
+    assert "--include-company" in ref

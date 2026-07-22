@@ -30,6 +30,7 @@ _FIELD_REFERENCE = """\
 (`sort_key`: higher score first, then stage, work_mode, firma). S1 = top row in the UI.
 - **refnr** — stable JobFit job id; used to merge human fields on re-export. Machine-written.
 - **starred_at** — when you starred the job (UTC); informational only, does not control S-order.
+- **company** — employer name from DB (only with `--include-company`; `jd_excerpt` stays redacted).
 - **company_type / stage / industry** — from classification.
 - **work_mode / on_call / german_level / english_ok** — from enrichment.
 - **tier / score** — target-company scoring (`dreamjob`, `cvbuilder`, `easywin`, `skip`), not prep fitness.
@@ -108,13 +109,15 @@ def render_market_md(snapshot: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def render_job_md(job: dict[str, Any], idx: int) -> str:
+def render_job_md(job: dict[str, Any], idx: int, *, include_company: bool = False) -> str:
     lines: list[str] = [f"### S{idx}"]
     lines.append(f"- refnr: {job.get('refnr') or '-'}")
     starred_at = job.get("starred_at") or ""
     if starred_at:
         lines.append(f"- starred_at: {starred_at}")
     lines.append(f"- title: {job.get('title') or '-'}")
+    if include_company:
+        lines.append(f"- company: {job.get('company') or '-'}")
     lines.append(
         f"- company_type / stage / industry: "
         f"{job.get('company_type') or '-'} / "
@@ -173,10 +176,18 @@ def render_md(data: dict[str, Any]) -> str:
     parts.append(render_market_md(data["market_snapshot"]))
     parts.append("")
     parts.append("## Starred jobs")
+    include_company = bool(data.get("include_company"))
     for i, job in enumerate(data["starred"], start=1):
-        parts.append(render_job_md(job, i))
+        parts.append(render_job_md(job, i, include_company=include_company))
         parts.append("")
     parts.append(_HOW_TO_USE)
     parts.append("")
-    parts.append(_FIELD_REFERENCE)
+    field_ref = _FIELD_REFERENCE
+    if not include_company:
+        field_ref = field_ref.replace(
+            "- **company** — employer name from DB (only with `--include-company`; "
+            "`jd_excerpt` stays redacted).\n",
+            "",
+        )
+    parts.append(field_ref)
     return "\n".join(parts)
