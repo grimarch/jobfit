@@ -1,0 +1,27 @@
+# prep_roles.yaml — optional config for prep-personas draft
+# Copy to prep_roles.yaml in the same directory (gitignored via data/*/input/).
+#
+# Override auto-selection of mock roles and order from context.md.
+# When absent, draft auto-selects: fit first, then stretch (up to 3); brand-only → later.
+#
+# S* ids must match ### S* blocks in context.md.
+
+mock_cycle:
+  - id: S1
+    label: Primary
+    archetype: startup product / AI
+  - id: S4
+    label: Mittelstand
+    archetype: hosting / IaC CI/CD
+  - id: S2
+    label: Stretch
+    archetype: startup platform + security
+
+# Shown in draft but not in first mock cycle
+later:
+  - id: S3
+    label: Later
+    archetype: enterprise FinTech obs
+    reason: brand-only, many gaps (AWS CDK, Datadog, Go) — revisit after first mock cycle
+
+mock_order: [S1, S4, S2]

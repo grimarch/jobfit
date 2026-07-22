@@ -484,6 +484,235 @@ def cmd_prep_claims_refine(
         raise SystemExit(1) from e
 
 
+@cli.group(name="prep-personas")
+def prep_personas_group() -> None:
+    """Generate prep roles (personas.draft.md → personas.llm.md) from context + claims."""
+
+
+@prep_personas_group.command(name="draft")
+@role_option
+@click.option(
+    "--context",
+    "context_path",
+    default=None,
+    metavar="PATH",
+    help="Prep context export (default: prompts/prep/{role}/context.md).",
+)
+@click.option(
+    "--claims",
+    "claims_path",
+    default=None,
+    metavar="PATH",
+    help="Reviewed claims.md (default: prompts/prep/{role}/claims.md).",
+)
+@click.option(
+    "--out",
+    "out_path",
+    default=None,
+    metavar="PATH",
+    help="Output draft path (default: prompts/prep/{role}/personas.draft.md).",
+)
+@click.option(
+    "--prep-roles",
+    "prep_roles_path",
+    default=None,
+    metavar="PATH",
+    help="Optional prep_roles.yaml to override auto-selection (default: data/user/{role}/input/prep_roles.yaml if present).",
+)
+@click.option(
+    "--no-require-reviewed",
+    "no_require_reviewed",
+    is_flag=True,
+    help="Skip the **Reviewed:** guard on claims.md.",
+)
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Overwrite --out if it already exists.",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Print selected S* ids and gap counts; write nothing.",
+)
+def cmd_prep_personas_draft(
+    role: str,
+    context_path: str | None,
+    claims_path: str | None,
+    out_path: str | None,
+    prep_roles_path: str | None,
+    no_require_reviewed: bool,
+    force: bool,
+    dry_run: bool,
+) -> None:
+    """Draft prep roles skeleton from context.md and reviewed claims.md.
+
+    Reads gaps_vs_cv per starred job, filters against claims Gaps table, and
+    writes deterministic Gaps for this job blocks. JD focus, lead, traps, and
+    stories are TODO placeholders for LLM refine.
+
+    Requires claims.md to have **Reviewed:** header (skip with --no-require-reviewed).
+    """
+    from pathlib import Path
+    from loguru import logger
+    from jobfit.prep_context import personas as prep_personas
+
+    ctx = Path(context_path) if context_path else Path(f"prompts/prep/{role}/context.md")
+    clm = Path(claims_path) if claims_path else prep_personas.default_claims_path(role)
+    out = Path(out_path) if out_path else prep_personas.default_draft_path(role)
+
+    if prep_roles_path:
+        proles: Path | None = Path(prep_roles_path)
+    else:
+        default_proles = prep_personas.default_prep_roles_yaml_path(role)
+        proles = default_proles if default_proles.is_file() else None
+
+    try:
+        prep_personas.run(
+            role_slug=role,
+            context_path=ctx,
+            claims_path=clm,
+            out_path=out,
+            prep_roles_path=proles,
+            require_reviewed=not no_require_reviewed,
+            dry_run=dry_run,
+            force=force,
+        )
+    except (FileExistsError, FileNotFoundError, ValueError) as e:
+        logger.error(str(e))
+        raise SystemExit(1) from e
+
+
+@prep_personas_group.command(name="refine")
+@role_option
+@click.option(
+    "--cv",
+    "cv_path",
+    default="prompts/CV.md",
+    metavar="PATH",
+    show_default=True,
+    help="Interview CV source of truth.",
+)
+@click.option(
+    "--claims",
+    "claims_path",
+    default=None,
+    metavar="PATH",
+    help="Reviewed claims.md (default: prompts/prep/{role}/claims.md).",
+)
+@click.option(
+    "--in",
+    "draft_path",
+    default=None,
+    metavar="PATH",
+    help="Draft input (default: prompts/prep/{role}/personas.draft.md).",
+)
+@click.option(
+    "--out",
+    "out_path",
+    default=None,
+    metavar="PATH",
+    help="LLM output (default: prompts/prep/{role}/personas.llm.md).",
+)
+@click.option(
+    "--prompt",
+    "prompt_path",
+    default=None,
+    metavar="PATH",
+    help="System prompt (default: prompts/prep/{role}/personas_review_prompt.md).",
+)
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Overwrite --out if it already exists.",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Validate inputs and log prompt sizes; no API call.",
+)
+@click.option(
+    "--print-prompt",
+    "print_prompt",
+    is_flag=True,
+    help="Print system + user prompts and exit (no API call).",
+)
+def cmd_prep_personas_refine(
+    role: str,
+    cv_path: str,
+    claims_path: str | None,
+    draft_path: str | None,
+    out_path: str | None,
+    prompt_path: str | None,
+    force: bool,
+    dry_run: bool,
+    print_prompt: bool,
+) -> None:
+    """Refine personas.draft.md with LLM → personas.llm.md (human verify still required).
+
+    Uses PREP_PERSONAS_* env vars (provider, API key, model); falls back to LLM_*.
+    Default model when unset: claude-haiku-4-5 (via jobfit.llm.resolve_model).
+
+    Gaps for this job lines must stay verbatim — validator warns on drift.
+    """
+    from pathlib import Path
+    from loguru import logger
+    from jobfit.llm import resolve_model, resolve_provider
+    from jobfit.prep_context import personas_refine
+    from jobfit.prompt_display import print_llm_prompt
+
+    cv = Path(cv_path)
+    clm = (
+        Path(claims_path)
+        if claims_path
+        else personas_refine.default_prompt_path(role).parent / "claims.md"
+    )
+    draft = (
+        Path(draft_path) if draft_path else personas_refine.default_draft_input_path(role)
+    )
+    out = Path(out_path) if out_path else personas_refine.default_llm_path(role)
+    prompt = Path(prompt_path) if prompt_path else personas_refine.default_prompt_path(role)
+
+    try:
+        system, user = personas_refine.prepare_prompts(
+            cv_path=cv,
+            claims_path=clm,
+            draft_path=draft,
+            prompt_path=prompt,
+        )
+    except (FileNotFoundError, ValueError) as e:
+        logger.error(str(e))
+        raise SystemExit(1) from e
+
+    if print_prompt:
+        from jobfit.prompt_display import print_llm_prompt
+
+        print_llm_prompt(
+            system=system,
+            user=user,
+            refnr=role,
+            doc_label=personas_refine.PROMPT_DOC_LABEL,
+            model=resolve_model(personas_refine.PROMPT_MODEL_VAR),
+            provider=resolve_provider(personas_refine.PROMPT_COMMAND_PREFIX),
+        )
+        return
+
+    try:
+        personas_refine.run(
+            role_slug=role,
+            cv_path=cv,
+            claims_path=clm,
+            draft_path=draft,
+            out_path=out,
+            prompt_path=prompt,
+            dry_run=dry_run,
+            force=force,
+        )
+    except (FileExistsError, FileNotFoundError, RuntimeError, ValueError) as e:
+        logger.error(str(e))
+        raise SystemExit(1) from e
+
+
 @cli.group(name="llm")
 def llm_group() -> None:
     """LLM provider utilities."""

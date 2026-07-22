@@ -113,7 +113,15 @@ Run when starting a new search wave or switching role focus.
 
 ### D. Practice material
 
-10. `personas.md` — 3 prep roles from fit/stretch (different archetypes)
+10. `personas.draft.md` + `personas.md` — 3 prep roles from fit/stretch (different archetypes):
+
+    ```bash
+    jobfit prep-personas draft --role ROLE --force
+    jobfit prep-personas refine --role ROLE --force
+    # verify → cp personas.llm.md personas.md + Reviewed header
+    # see docs/prep-personas-review.md
+    ```
+
 11. `stories.md` — 8–10 stories from claims (DE for HR, EN for tech)
 12. `notes.md` — must-defend topics + recurring starred gaps + 2-min pitch
 13. `drills.md` — 2 design + 2 debug written answers for primary prep role (S1)
@@ -156,7 +164,7 @@ Full table: [prompts/prep/README.md](../prompts/prep/README.md).
 |---|---|---|
 | `context.md` | Which starred jobs, market gaps, overlap **per job**? | `prep-context export` |
 | `claims.md` | What can I **prove** from CV? | [prep-claims-review.md](prep-claims-review.md) |
-| `personas.md` | Which 3 jobs / prep roles do I practice on? | — (manual) |
+| `personas.md` | Which 3 jobs / prep roles do I practice on? | [prep-personas-review.md](prep-personas-review.md) |
 | `stories.md` | How do I tell the story in an interview? | — (manual / agent) |
 | `notes.md` | Depth + HR pitch + Gehalt | — (manual) |
 | `drills.md` | Written rehearsal before mock | — (manual) |
