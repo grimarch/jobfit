@@ -11,6 +11,7 @@ from jobfit.prep_context.personas_refine import (
     _extract_claims_excerpt,
     _extract_gap_lines,
     _extract_prep_config,
+    apply_draft_header,
     build_user_prompt,
     default_draft_input_path,
     default_llm_path,
@@ -335,6 +336,49 @@ def test_validate_refine_output_missing_iso_timestamp():
     assert any("ISO-8601" in w for w in warnings)
 
 
+def test_validate_refine_output_timestamp_mismatch():
+    refined = _CLEAN_REFINED.replace(
+        "**Draft** generated: 2026-07-22T00:00:00Z",
+        "**Draft** generated: 2025-01-19T14:22:00Z",
+    )
+    warnings = validate_refine_output(_MIN_DRAFT, refined)
+    assert any("timestamp mismatch" in w for w in warnings)
+
+
+def test_apply_draft_header_replaces_wrong_timestamp():
+    llm = (
+        "# Prep roles (DevOps mid-level)\n\n"
+        "**Draft** generated: 2025-01-19T14:22:00Z\n\n"
+        "## S1 — Primary\n"
+    )
+    fixed = apply_draft_header(_MIN_DRAFT, llm)
+    assert "**Draft** generated: 2026-07-22T00:00:00Z" in fixed
+    assert "# Prep roles (devops)" in fixed
+    assert "2025-01-19" not in fixed
+
+
+def test_apply_draft_header_inserts_missing_timestamp():
+    llm = "# Prep roles (wrong)\n\n## S1 — Primary\n"
+    fixed = apply_draft_header(_MIN_DRAFT, llm)
+    assert "**Draft** generated: 2026-07-22T00:00:00Z" in fixed
+    assert fixed.startswith("# Prep roles (devops)")
+
+
+def test_apply_draft_header_moves_trailing_timestamp_to_top():
+    llm = (
+        "# Prep roles (devops)\n"
+        "<!-- jobfit:prep-personas:llm-input -->\n\n"
+        "## S1 — Primary\n\n"
+        "<!-- /jobfit:prep-personas:llm-input -->\n\n"
+        "**Draft** generated: 2025-01-19T14:22:00Z\n"
+    )
+    fixed = apply_draft_header(_MIN_DRAFT, llm)
+    assert fixed.startswith("# Prep roles (devops)\n\n**Draft** generated: 2026-07-22T00:00:00Z\n\n")
+    assert fixed.count("**Draft** generated:") == 1
+    assert "2025-01-19" not in fixed
+    assert fixed.rstrip().endswith("<!-- /jobfit:prep-personas:llm-input -->")
+
+
 def test_validate_refine_output_missing_mock_order():
     """P-04: ## Mock order section must be present when draft has it."""
     refined = _CLEAN_REFINED.replace("## Mock order\n\n1. **S1** (Primary) — fit\n\n", "")
@@ -420,7 +464,7 @@ def test_run_writes_llm_output(mock_key: MagicMock, mock_complete: MagicMock, tm
     out = tmp_path / "out.md"
 
     mock_complete.return_value = (
-        "```markdown\n# Prep roles (devops)\n\n**Draft** generated: x\n\n"
+        "```markdown\n# Prep roles (DevOps mid-level)\n\n**Draft** generated: 2025-01-19T14:22:00Z\n\n"
         "<!-- jobfit:prep-personas:llm-input -->\n\n"
         "## S1 — Primary (startup)\n\n"
         "**Gaps for this job:**\n"
@@ -440,7 +484,9 @@ def test_run_writes_llm_output(mock_key: MagicMock, mock_complete: MagicMock, tm
     )
     assert summary["mode"] == "write"
     text = out.read_text(encoding="utf-8")
-    assert text.startswith("# Prep roles")
+    assert text.startswith("# Prep roles (devops)")
+    assert "**Draft** generated: 2026-07-22T00:00:00Z" in text
+    assert "2025-01-19" not in text
     assert "jobfit:prep-personas:llm-input" in text
     mock_complete.assert_called_once()
 

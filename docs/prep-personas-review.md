@@ -46,15 +46,15 @@ docker compose build app
 ## Verify checklist (~10 min)
 
 - [ ] 3 mock roles (fit + stretch, different archetypes) + 1 Later
-- [ ] **Gaps for this job** match claims.md Gaps table — spot-check AWS/Azure/Jenkins (must be verbatim)
+- [ ] **Gaps for this job** — in **each** mock-cycle section (S1, S4, S2, …): every bullet under that heading must match `personas.draft.md` byte-for-byte (draft copied them from claims.md). Include only gaps listed for that job in claims **Jobs** column — e.g. S1: AWS + Azure; S4: AWS + Azure + Jenkins; S2: AWS + OpenTelemetry + IAM. Spot-check one skill per role; if any line was rephrased, fail the file.
 - [ ] No production AWS/Azure claims introduced in Lead from claims
 - [ ] Language matches context: S4 DE primary, S1/S2 EN; S4 on-call = historical 2016–2020
 - [ ] Mock order matches `mock_order` list in `prep_roles.yaml`
 - [ ] Anchors table filled (one-liner per role)
 - [ ] Stories to write numbered consistently
 - [ ] Later job has company + refnr (not just one-liner)
-- [ ] H1 is `# Prep roles (devops)` — not renamed
-- [ ] `**Draft** generated:` carries original ISO timestamp (not replaced with CV metadata)
+- [ ] H1 — refine copies from draft; minor scope hint in parentheses is OK at verify
+- [ ] `**Draft** generated:` — must match `personas.draft.md` (CLI `apply_draft_header` after refine)
 - [ ] No `[CANDIDATE_NAME]` / `[EMAIL]` PII in output
 - [ ] Summary table (`| Prep role | Job | Company |`) present
 - [ ] `## Mock order` section present with numbered list

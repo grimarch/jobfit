@@ -31,6 +31,28 @@ _REFINE_CONFIG_RE = re.compile(
     r"<!-- jobfit:prep-personas:refine-config\n(.*?)/jobfit:prep-personas:refine-config -->",
     re.DOTALL,
 )
+_DRAFT_H1_RE = re.compile(r"^# Prep roles \([^)]+\)\s*$", re.MULTILINE)
+_DRAFT_GENERATED_RE = re.compile(r"^\*\*Draft\*\* generated:\s*(.+?)\s*$", re.MULTILINE)
+
+
+def apply_draft_header(draft_text: str, refined_text: str) -> str:
+    """Force H1 and **Draft** generated from draft at the top of LLM output."""
+    h1_match = _DRAFT_H1_RE.search(draft_text)
+    gen_match = _DRAFT_GENERATED_RE.search(draft_text)
+    if not h1_match and not gen_match:
+        return refined_text
+
+    body = _DRAFT_GENERATED_RE.sub("", refined_text)
+    body = _DRAFT_H1_RE.sub("", body)
+    body = re.sub(r"\n{3,}", "\n\n", body).strip()
+
+    header_parts: list[str] = []
+    if h1_match:
+        header_parts.append(h1_match.group(0).strip())
+    if gen_match:
+        header_parts.append(f"**Draft** generated: {gen_match.group(1).strip()}")
+
+    return f"{'\n\n'.join(header_parts)}\n\n{body}"
 
 
 def default_llm_path(role_slug: str) -> Path:
@@ -181,12 +203,20 @@ def validate_refine_output(draft_text: str, refined_text: str) -> list[str]:
         if placeholder in refined_text:
             warnings.append(f"PII placeholder {placeholder!r} in output — remove before sharing")
 
-    # P-03: Draft header must carry ISO-8601 timestamp
-    draft_gen_match = re.search(r"\*\*Draft\*\* generated:", refined_text)
-    if draft_gen_match:
-        draft_line = refined_text[draft_gen_match.start():].split("\n")[0]
-        if not re.search(r"\d{4}-\d{2}-\d{2}T", draft_line):
+    # P-03: Draft header must carry ISO-8601 timestamp matching draft
+    draft_ts_match = _DRAFT_GENERATED_RE.search(draft_text)
+    refined_ts_match = _DRAFT_GENERATED_RE.search(refined_text)
+    if refined_ts_match:
+        refined_line = refined_ts_match.group(0)
+        if not re.search(r"\d{4}-\d{2}-\d{2}T", refined_line):
             warnings.append("**Draft** generated: line missing ISO-8601 timestamp")
+        elif draft_ts_match and draft_ts_match.group(1).strip() != refined_ts_match.group(1).strip():
+            warnings.append(
+                "Draft timestamp mismatch: expected "
+                f"{draft_ts_match.group(1).strip()!r}, got {refined_ts_match.group(1).strip()!r}"
+            )
+    elif draft_ts_match:
+        warnings.append("**Draft** generated: line missing in output")
 
     if _LLM_INPUT_BEGIN in draft_text and _LLM_INPUT_BEGIN not in refined_text:
         warnings.append("llm-input begin marker missing in LLM output")
@@ -320,6 +350,7 @@ def run(
     if not refined:
         raise RuntimeError("LLM returned empty output")
 
+    refined = apply_draft_header(draft_text, refined)
     warnings = validate_refine_output(draft_text, refined)
     for warning in warnings:
         logger.warning("prep-personas refine: {}", warning)
