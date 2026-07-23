@@ -1,8 +1,8 @@
-"""Unit tests for jobfit/prep_context/redact.py."""
+"""Unit tests for jobfit/prep/context/redact.py."""
 
 import pytest
 
-from jobfit.prep_context.redact import firma_variants, redact_excerpt, text_prefix_stems
+from jobfit.prep.context.redact import firma_variants, redact_excerpt, text_prefix_stems
 
 
 @pytest.mark.parametrize("firma,text,expected_absent", [

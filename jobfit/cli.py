@@ -236,7 +236,7 @@ def cmd_prep_context_export(
     merged back by refnr. Use --no-merge to skip this and overwrite from scratch.
     """
     from pathlib import Path
-    from jobfit.prep_context import export as prep_export
+    from jobfit.prep.context import export as prep_export
 
     prep_export.run(
         role_slug=role,
@@ -332,7 +332,7 @@ def cmd_prep_claims_draft(
     """
     from pathlib import Path
 
-    from jobfit.prep_context import claims as prep_claims
+    from jobfit.prep.claims import draft as prep_claims
 
     default_ctx = Path(f"prompts/prep/{role}/context.md")
     if context_path:
@@ -436,7 +436,7 @@ def cmd_prep_claims_refine(
     from pathlib import Path
 
     from jobfit.llm import resolve_model, resolve_provider
-    from jobfit.prep_context import claims_refine
+    from jobfit.prep.claims import refine as claims_refine
     from jobfit.prompt_display import print_llm_prompt
 
     cv = Path(cv_path)
@@ -555,7 +555,7 @@ def cmd_prep_personas_draft(
     """
     from pathlib import Path
     from loguru import logger
-    from jobfit.prep_context import personas as prep_personas
+    from jobfit.prep.personas import draft as prep_personas
 
     ctx = Path(context_path) if context_path else Path(f"prompts/prep/{role}/context.md")
     clm = Path(claims_path) if claims_path else prep_personas.default_claims_path(role)
@@ -658,7 +658,7 @@ def cmd_prep_personas_refine(
     from pathlib import Path
     from loguru import logger
     from jobfit.llm import resolve_model, resolve_provider
-    from jobfit.prep_context import personas_refine
+    from jobfit.prep.personas import refine as personas_refine
     from jobfit.prompt_display import print_llm_prompt
 
     cv = Path(cv_path)

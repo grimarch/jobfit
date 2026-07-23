@@ -322,7 +322,7 @@ def build_layout_sections(
 
     role = ROLES[role_slug]
     if bullets is None:
-        from jobfit.prep_context.claims import extract_experience_bullets
+        from jobfit.prep.claims.claims import extract_experience_bullets
 
         bullets = extract_experience_bullets(cv_text)
 

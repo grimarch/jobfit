@@ -12,7 +12,7 @@ import yaml
 from loguru import logger
 
 from jobfit.config import USER_DATA_DIR
-from jobfit.prep_context.context_parse import ContextBlock, parse_context_blocks
+from jobfit.prep.context_parse import ContextBlock, parse_context_blocks
 
 _DRAFT_PERSONAS_FILE = "personas.draft.md"
 _REVIEWED_CLAIMS_FILE = "claims.md"

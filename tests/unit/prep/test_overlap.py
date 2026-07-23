@@ -2,7 +2,7 @@
 
 import pytest
 
-from jobfit.prep_context.overlap import (
+from jobfit.prep.overlap import (
     compute_cv_skills,
     compute_job_overlap,
     detect_agency_suspect,

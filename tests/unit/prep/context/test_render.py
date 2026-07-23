@@ -1,9 +1,9 @@
-"""Unit tests for prep_context render module."""
+"""Unit tests for prep context render module."""
 
 from __future__ import annotations
 
-import jobfit.prep_context.render as render_mod
-from jobfit.prep_context.render import render_job_md, render_md
+import jobfit.prep.context.render as render_mod
+from jobfit.prep.context.render import render_job_md, render_md
 
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────

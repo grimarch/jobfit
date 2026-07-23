@@ -8,7 +8,8 @@ from pathlib import Path
 from loguru import logger
 
 from jobfit.llm import complete as llm_complete, resolve_key, resolve_model, resolve_provider
-from jobfit.prep_context.claims import default_draft_path, extract_llm_input
+from jobfit.prep.claims.claims import default_draft_path, extract_llm_input
+from jobfit.prep.prompts_util import load_system_prompt, strip_markdown_fences
 
 _COMMAND_PREFIX = "PREP_CLAIMS"
 _MODEL_VAR = "PREP_CLAIMS_MODEL"
@@ -31,24 +32,6 @@ def default_prompt_path(role_slug: str) -> Path:
     return Path(f"prompts/prep/{role_slug}") / "claims_review_prompt.md"
 
 
-def load_system_prompt(prompt_path: Path) -> str:
-    """Extract system instructions from role claims_review_prompt.md."""
-    text = prompt_path.read_text(encoding="utf-8")
-    if _SYSTEM_MARKER not in text:
-        raise ValueError(f"{prompt_path}: missing {_SYSTEM_MARKER!r} section")
-    rest = text.split(_SYSTEM_MARKER, 1)[1]
-    start_match = re.search(r"^---\s*$", rest, re.MULTILINE)
-    if not start_match:
-        raise ValueError(f"{prompt_path}: expected --- after system marker")
-    body_start = start_match.end()
-    end_match = re.search(r"^---\s*\n## After LLM", rest[body_start:], re.MULTILINE)
-    body = rest[body_start : body_start + end_match.start()] if end_match else rest[body_start:]
-    body = body.strip()
-    if not body:
-        raise ValueError(f"{prompt_path}: empty system prompt body")
-    return body
-
-
 def build_user_prompt(*, cv_text: str, draft_text: str) -> str:
     return "\n".join(
         [
@@ -63,13 +46,6 @@ def build_user_prompt(*, cv_text: str, draft_text: str) -> str:
             "Return the full refined markdown document only. No preamble.",
         ]
     )
-
-
-def strip_markdown_fences(text: str) -> str:
-    text = text.strip()
-    text = re.sub(r"^```(?:markdown|md)?\s*", "", text)
-    text = re.sub(r"\s*```$", "", text)
-    return text.strip()
 
 
 def validate_refine_output(draft_text: str, refined_text: str) -> list[str]:

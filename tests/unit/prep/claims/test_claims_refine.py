@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jobfit.prep_context.claims_refine import (
+from jobfit.prep.claims.refine import (
     build_user_prompt,
     default_llm_path,
     default_prompt_path,
@@ -14,7 +14,7 @@ from jobfit.prep_context.claims_refine import (
     strip_markdown_fences,
     validate_refine_output,
 )
-from jobfit.prep_context.claims import extract_llm_input
+from jobfit.prep.claims.draft import extract_llm_input
 
 _MIN_PROMPT_MD = """\
 # Claims review prompt
@@ -102,7 +102,7 @@ def test_extract_llm_input_fallback_footer_heading():
 
 
 def test_prepare_prompts_uses_llm_input_only(tmp_path: Path):
-    from jobfit.prep_context.claims_refine import prepare_prompts
+    from jobfit.prep.claims.refine import prepare_prompts
 
     cv = tmp_path / "cv.md"
     cv.write_text(_MIN_CV, encoding="utf-8")
@@ -153,8 +153,8 @@ def test_run_dry_run(tmp_path: Path):
     assert not out.exists()
 
 
-@patch("jobfit.prep_context.claims_refine.llm_complete")
-@patch("jobfit.prep_context.claims_refine.resolve_key", return_value="test-key")
+@patch("jobfit.prep.claims.refine.llm_complete")
+@patch("jobfit.prep.claims.refine.resolve_key", return_value="test-key")
 def test_run_writes_llm_output(mock_key: MagicMock, mock_complete: MagicMock, tmp_path: Path):
     cv = tmp_path / "cv.md"
     cv.write_text(_MIN_CV, encoding="utf-8")

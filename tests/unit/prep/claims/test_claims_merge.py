@@ -1,6 +1,6 @@
 """Unit tests for prep claims merge helpers."""
 
-from jobfit.prep_context.claims_merge import parse_gaps_table
+from jobfit.prep.claims.merge import parse_gaps_table
 
 _LEGACY_GAPS = """\
 ## Gaps vs starred / market (honest transfer lines)

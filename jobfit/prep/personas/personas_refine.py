@@ -8,7 +8,8 @@ from pathlib import Path
 from loguru import logger
 
 from jobfit.llm import complete as llm_complete, resolve_key, resolve_model, resolve_provider
-from jobfit.prep_context.personas import default_draft_path, extract_llm_input
+from jobfit.prep.personas.personas import default_draft_path, extract_llm_input
+from jobfit.prep.prompts_util import load_system_prompt, strip_markdown_fences
 
 _COMMAND_PREFIX = "PREP_PERSONAS"
 _MODEL_VAR = "PREP_PERSONAS_MODEL"
@@ -65,26 +66,6 @@ def default_prompt_path(role_slug: str) -> Path:
 
 def default_draft_input_path(role_slug: str) -> Path:
     return default_draft_path(role_slug)
-
-
-def load_system_prompt(prompt_path: Path) -> str:
-    """Extract system instructions from personas_review_prompt.md."""
-    text = prompt_path.read_text(encoding="utf-8")
-    if _SYSTEM_MARKER not in text:
-        raise ValueError(f"{prompt_path}: missing {_SYSTEM_MARKER!r} section")
-    rest = text.split(_SYSTEM_MARKER, 1)[1]
-    start_match = re.search(r"^---\s*$", rest, re.MULTILINE)
-    if not start_match:
-        raise ValueError(f"{prompt_path}: expected --- after system marker")
-    body_start = start_match.end()
-    end_match = re.search(r"^---\s*\n## After LLM", rest[body_start:], re.MULTILINE)
-    body = (
-        rest[body_start : body_start + end_match.start()] if end_match else rest[body_start:]
-    )
-    body = body.strip()
-    if not body:
-        raise ValueError(f"{prompt_path}: empty system prompt body")
-    return body
 
 
 def _extract_claims_excerpt(claims_text: str) -> str:
@@ -155,13 +136,6 @@ def build_user_prompt(*, cv_text: str, claims_text: str, draft_text: str) -> str
         ])
     sections.append("Return the full refined markdown document only. No preamble.")
     return "\n".join(sections)
-
-
-def strip_markdown_fences(text: str) -> str:
-    text = text.strip()
-    text = re.sub(r"^```(?:markdown|md)?\s*", "", text)
-    text = re.sub(r"\s*```$", "", text)
-    return text.strip()
 
 
 def _extract_gap_lines(text: str) -> list[str]:

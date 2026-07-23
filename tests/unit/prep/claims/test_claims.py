@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from jobfit.prep_context.claims import (
+from jobfit.prep.claims.draft import (
     GapLineEntry,
     aggregate_gaps,
     build_skill_claims,
@@ -19,13 +19,13 @@ from jobfit.prep_context.claims import (
     render_gaps_block,
     run,
 )
-from jobfit.prep_context.claims_layout import (
+from jobfit.prep.claims.layout import (
     build_layout_sections,
     default_user_layout_path,
     repo_layout_path,
     resolve_layout_path,
 )
-from jobfit.prep_context.claims_merge import merge_gaps_block, parse_gaps_table
+from jobfit.prep.claims.merge import merge_gaps_block, parse_gaps_table
 from jobfit.roles import ROLES
 
 _MINI_CV = """

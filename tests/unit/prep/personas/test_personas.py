@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from jobfit.prep_context.context_parse import ContextBlock, parse_context_blocks
-from jobfit.prep_context.personas import (
+from jobfit.prep.context_parse import ContextBlock, parse_context_blocks
+from jobfit.prep.personas.draft import (
     ClaimsGapEntry,
     _build_roles_from_yaml,
     default_draft_path,

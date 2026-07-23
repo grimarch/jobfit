@@ -1,8 +1,8 @@
-"""Unit tests for starred sort order in prep_context export."""
+"""Unit tests for starred sort order in prep context export."""
 
 from __future__ import annotations
 
-from jobfit.prep_context.export import _sort_starred_records
+from jobfit.prep.context.export import _sort_starred_records
 
 
 def test_sort_starred_records_matches_dashboard_score_order():

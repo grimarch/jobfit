@@ -1,8 +1,8 @@
-"""Unit tests for prep_context merge parser."""
+"""Unit tests for prep context merge parser."""
 
 from __future__ import annotations
 
-from jobfit.prep_context.merge import parse_human_fields
+from jobfit.prep.context.merge import parse_human_fields
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 

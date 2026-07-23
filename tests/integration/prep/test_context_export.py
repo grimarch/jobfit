@@ -1,4 +1,4 @@
-"""Integration tests for prep_context export.
+"""Integration tests for prep context export.
 
 Calls the real export logic against the test database.
 No LLM calls happen — only DB queries and local file I/O.
@@ -64,7 +64,7 @@ def out_md(tmp_path: Path) -> Path:
 
 def test_export_writes_md_only(cv_file: Path, out_md: Path) -> None:
     """Export creates exactly one .md file and no .json file next to it."""
-    from jobfit.prep_context import export as prep_export
+    from jobfit.prep.context import export as prep_export
 
     prep_export.run(
         role_slug=_ROLE,
@@ -87,7 +87,7 @@ def test_export_md_contains_refnr_for_starred(cv_file: Path, out_md: Path) -> No
     if starred_refnr is None:
         pytest.skip("No starred jobs for role 'devops' in test DB")
 
-    from jobfit.prep_context import export as prep_export
+    from jobfit.prep.context import export as prep_export
 
     prep_export.run(
         role_slug=_ROLE,
@@ -113,7 +113,7 @@ def test_export_md_has_empty_human_slots(cv_file: Path, out_md: Path) -> None:
     if starred_refnr is None:
         pytest.skip("No starred jobs for role 'devops' in test DB")
 
-    from jobfit.prep_context import export as prep_export
+    from jobfit.prep.context import export as prep_export
 
     prep_export.run(
         role_slug=_ROLE,
@@ -132,7 +132,7 @@ def test_export_md_has_empty_human_slots(cv_file: Path, out_md: Path) -> None:
 
 def test_export_md_has_how_to_use_section(cv_file: Path, out_md: Path) -> None:
     """Output md ends with a ## How to use section."""
-    from jobfit.prep_context import export as prep_export
+    from jobfit.prep.context import export as prep_export
 
     prep_export.run(
         role_slug=_ROLE,
@@ -154,7 +154,7 @@ def test_export_merge_preserves_human_fields(cv_file: Path, out_md: Path) -> Non
     if starred_refnr is None:
         pytest.skip("No starred jobs for role 'devops' in test DB")
 
-    from jobfit.prep_context import export as prep_export
+    from jobfit.prep.context import export as prep_export
 
     # First export — write empty slots.
     prep_export.run(
@@ -206,7 +206,7 @@ def test_export_no_merge_discards_human_fields(cv_file: Path, out_md: Path) -> N
     if starred_refnr is None:
         pytest.skip("No starred jobs for role 'devops' in test DB")
 
-    from jobfit.prep_context import export as prep_export
+    from jobfit.prep.context import export as prep_export
 
     prep_export.run(
         role_slug=_ROLE,
@@ -239,7 +239,7 @@ def test_export_no_merge_discards_human_fields(cv_file: Path, out_md: Path) -> N
 
 def test_export_dry_run_writes_nothing(cv_file: Path, out_md: Path) -> None:
     """--dry-run prints a summary but creates no output file."""
-    from jobfit.prep_context import export as prep_export
+    from jobfit.prep.context import export as prep_export
 
     prep_export.run(
         role_slug=_ROLE,
@@ -281,7 +281,7 @@ def test_export_omits_company_by_default(cv_file: Path, out_md: Path) -> None:
     if starred_refnr is None:
         pytest.skip("No starred jobs for role 'devops' in test DB")
 
-    from jobfit.prep_context import export as prep_export
+    from jobfit.prep.context import export as prep_export
 
     prep_export.run(
         role_slug=_ROLE,
@@ -304,7 +304,7 @@ def test_export_include_company_writes_firma(cv_file: Path, out_md: Path) -> Non
     if starred_refnr is None or not firma:
         pytest.skip("No starred job with firma for role 'devops' in test DB")
 
-    from jobfit.prep_context import export as prep_export
+    from jobfit.prep.context import export as prep_export
 
     prep_export.run(
         role_slug=_ROLE,

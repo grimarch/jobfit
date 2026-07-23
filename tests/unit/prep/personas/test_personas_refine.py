@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from jobfit.prep_context.personas_refine import (
+from jobfit.prep.personas.refine import (
     _extract_claims_excerpt,
     _extract_gap_lines,
     _extract_prep_config,
@@ -21,7 +21,7 @@ from jobfit.prep_context.personas_refine import (
     strip_markdown_fences,
     validate_refine_output,
 )
-from jobfit.prep_context.personas import extract_llm_input
+from jobfit.prep.personas.draft import extract_llm_input
 
 _MIN_PROMPT_MD = """\
 # Personas review prompt
@@ -86,7 +86,7 @@ _MIN_DRAFT = """\
 **Company:** TestCo
 **prep_label:** fit · **refnr:** 001
 
-**JD focus:** _TODO — refine from jd_excerpt_
+**JD focus:** _TODO — paraphrase JD excerpt above_
 
 **Lead from claims:** _TODO — refine: 3–5 ok claims_
 
@@ -450,8 +450,8 @@ def test_run_dry_run(tmp_path: Path):
     assert int(summary["user_chars"]) > 0  # type: ignore[arg-type]
 
 
-@patch("jobfit.prep_context.personas_refine.llm_complete")
-@patch("jobfit.prep_context.personas_refine.resolve_key", return_value="test-key")
+@patch("jobfit.prep.personas.refine.llm_complete")
+@patch("jobfit.prep.personas.refine.resolve_key", return_value="test-key")
 def test_run_writes_llm_output(mock_key: MagicMock, mock_complete: MagicMock, tmp_path: Path):
     cv = tmp_path / "cv.md"
     cv.write_text(_MIN_CV, encoding="utf-8")

@@ -12,7 +12,7 @@ from typing import Any
 import yaml
 
 from jobfit import config
-from jobfit.prep_context.overlap import compute_cv_skills
+from jobfit.prep.overlap import compute_cv_skills
 from jobfit.roles import ROLES, Role
 
 _GAP_LINES_FILE = "gap_lines.yaml"
@@ -250,7 +250,7 @@ def _md_cell(text: str) -> str:
 
 
 def _render_claims_table(rows: list[SkillClaim] | list[Any], *, kind: str) -> list[str]:
-    from jobfit.prep_context.claims_layout import LayoutRow
+    from jobfit.prep.claims.layout import LayoutRow
 
     lines: list[str] = []
     if kind == "weak":
@@ -284,7 +284,7 @@ def render_gaps_block(
     existing_gaps: dict[str, dict[str, str]] | None = None,
     gap_lines_path: Path | None = None,
 ) -> str:
-    from jobfit.prep_context.claims_merge import _GAPS_END, _GAPS_START
+    from jobfit.prep.claims.merge import _GAPS_END, _GAPS_START
 
     existing_gaps = existing_gaps or {}
     lines: list[str] = [
@@ -326,7 +326,7 @@ def render_claims_md(
     gap_lines_path: Path | None = None,
     cv_text: str | None = None,
 ) -> str:
-    from jobfit.prep_context.claims_layout import build_layout_sections
+    from jobfit.prep.claims.layout import build_layout_sections
 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     layout = None
@@ -470,8 +470,8 @@ def run(
 ) -> dict[str, Any]:
     from loguru import logger
 
-    from jobfit.prep_context.claims_layout import build_layout_sections, load_layout
-    from jobfit.prep_context.claims_merge import (
+    from jobfit.prep.claims.layout import build_layout_sections, load_layout
+    from jobfit.prep.claims.merge import (
         is_reviewed_claims,
         merge_gaps_block,
         parse_gaps_table,

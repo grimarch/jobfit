@@ -14,16 +14,16 @@ from jobfit.dashboards.scoring import (
     norm_firma,
     sort_key,
 )
-from jobfit.prep_context.market import build_market_snapshot
-from jobfit.prep_context.merge import parse_human_fields
-from jobfit.prep_context.overlap import (
+from jobfit.prep.context.market import build_market_snapshot
+from jobfit.prep.context.merge import parse_human_fields
+from jobfit.prep.overlap import (
     compute_cv_skills,
     compute_job_overlap,
     detect_agency_suspect,
     prep_heuristic,
 )
-from jobfit.prep_context.redact import redact_excerpt
-from jobfit.prep_context.render import render_md
+from jobfit.prep.context.redact import redact_excerpt
+from jobfit.prep.context.render import render_md
 from jobfit.roles import ROLES
 from jobfit.scoring_config import load_scoring_config
 

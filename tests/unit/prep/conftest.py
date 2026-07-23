@@ -1,4 +1,4 @@
-"""Prep-context tests run without host user input files (claims_layout.yaml, gap_lines.yaml)."""
+"""Prep tests run without host user input files (claims_layout.yaml, gap_lines.yaml)."""
 
 from __future__ import annotations
 
