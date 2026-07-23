@@ -1,17 +1,10 @@
-# prep_roles.yaml — REQUIRED config for prep-personas draft
-# Copy to prep_roles.yaml in the same directory (gitignored via data/*/input/).
-# Demo reference: data/user/devops/input/demo/prep_roles.yaml
-#
-# `prep-personas draft` will raise an error if this file is absent.
-# S* ids must match ### S* blocks in context.md.
+# Demo prep_roles.yaml — fictional mock cycle for Max Mustermann (see demo/CV_devops.md).
+# S* ids must match ### S* blocks in your exported context.md.
 
 mock_cycle:
   - id: S1
     label: Primary
     archetype: startup / SaaS platform
-    # Optional: LLM hints — passed to `refine` as per-role PREP CONFIG.
-    # lead_themes, language, framing, mock_traps_extra are guidance only;
-    # CV and claims.md override on conflict.
     # llm:
     #   lead_themes: EKS, ArgoCD, GitOps, Terraform
     #   language: EN
@@ -30,7 +23,6 @@ mock_cycle:
     #   lead_themes: observability, Vault, CI/CD security gates
     #   language: EN
 
-# Shown in draft but not in first mock cycle
 later:
   - id: S4
     label: Later
@@ -39,7 +31,6 @@ later:
 
 mock_order: [S1, S2, S3]
 
-# Optional: global refine config — appended to PREP CONFIG for the LLM.
 # refine:
 #   story_numbering: 1=EKS migration, 2=GitOps rollout, 3=FinOps cost reduction
 #   scope_note: senior platform engineer — do not imply people management unless CV shows it

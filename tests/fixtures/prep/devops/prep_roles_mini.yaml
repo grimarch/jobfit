@@ -1,0 +1,10 @@
+# Test fixture — minimal prep_roles.yaml for context_mini.md
+mock_cycle:
+  - id: S1
+    label: Primary
+  - id: S4
+    label: Stretch
+  - id: S2
+    label: Stretch 2
+later: []
+mock_order: [S1, S4, S2]

@@ -1,12 +1,6 @@
-# Optional gap lines cache for prep-claims draft (Gaps Do not / Say columns).
-# Copy to gap_lines.yaml in the same directory (gitignored via data/*/input/).
-# Demo reference: data/user/devops/input/demo/gap_lines.yaml
-#
-# Flat string = Say instead only. Mapping form sets both columns:
-#
-# Jenkins:
-#   do_not_claim: "Jenkins admin in production"
-#   say_instead: "Primary CI is GitLab CI and GitHub Actions; Jenkins patterns map directly"
+# Demo gap_lines.yaml — honest transfer lines for Max Mustermann (see demo/CV_devops.md).
+# Skills listed here are common JD gaps; demo CV leads with GitLab CI, Terraform/Pulumi,
+# Prometheus/Grafana/OpenTelemetry on AWS/GCP — not Jenkins, Datadog, or AWS CDK day-to-day.
 
 Jenkins:
   do_not_claim: "Jenkins admin in production"

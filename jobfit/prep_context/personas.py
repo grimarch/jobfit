@@ -11,6 +11,7 @@ from typing import Any
 import yaml
 from loguru import logger
 
+from jobfit.config import USER_DATA_DIR
 from jobfit.prep_context.context_parse import ContextBlock, parse_context_blocks
 
 _DRAFT_PERSONAS_FILE = "personas.draft.md"
@@ -40,7 +41,7 @@ def default_claims_path(role_slug: str) -> Path:
 
 
 def default_prep_roles_yaml_path(role_slug: str) -> Path:
-    return Path(f"data/user/{role_slug}/input/prep_roles.yaml")
+    return USER_DATA_DIR / role_slug / "input" / "prep_roles.yaml"
 
 
 def require_reviewed_claims(claims_text: str, claims_path: Path) -> None:
@@ -175,65 +176,17 @@ def load_prep_roles_yaml(path: Path) -> dict[str, Any] | None:
     if not path.is_file():
         return None
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
-    return data if isinstance(data, dict) else None
+    if not isinstance(data, dict):
+        raise ValueError(f"{path}: expected YAML mapping, got {type(data).__name__}")
+    return data
 
-
-def auto_select_roles(blocks: list[ContextBlock]) -> dict[str, Any]:
-    """Auto-select prep roles when no YAML config provided (TZ §6).
-
-    Rules:
-    - mock_cycle: prep_label ∈ {fit, stretch}, fit first, up to 3
-    - later: prep_label ∈ {brand-only, skip-for-prep}
-    - mock_order: fit first, then stretch in context order
-    """
-    fit_jobs = [b for b in blocks if b.prep_label.strip().lower() == "fit"]
-    stretch_jobs = [b for b in blocks if b.prep_label.strip().lower() == "stretch"]
-    later_jobs = [
-        b
-        for b in blocks
-        if b.prep_label.strip().lower() in ("brand-only", "skip-for-prep")
-    ]
-
-    ordered = fit_jobs + stretch_jobs
-    mock_cycle_blocks = ordered[:3]
-
-    fit_count = 0
-    stretch_count = 0
-    cycle_entries: list[dict[str, str]] = []
-    for block in mock_cycle_blocks:
-        archetype = _archetype_from_block(block)
-        if block.prep_label.lower() == "fit":
-            label = "Primary" if fit_count == 0 else f"Fit {fit_count + 1}"
-            fit_count += 1
-        else:
-            label = "Stretch" if stretch_count == 0 else f"Stretch {stretch_count + 1}"
-            stretch_count += 1
-        cycle_entries.append({"id": block.sid, "label": label, "archetype": archetype})
-
-    later_entries: list[dict[str, str]] = []
-    for block in later_jobs:
-        later_entries.append(
-            {
-                "id": block.sid,
-                "label": "Later",
-                "archetype": _archetype_from_block(block),
-                "reason": f"prep_label: {block.prep_label}",
-            }
-        )
-
-    return {
-        "mock_cycle": cycle_entries,
-        "later": later_entries,
-        "mock_order": [e["id"] for e in cycle_entries],
-        "_auto": True,
-    }
 
 
 def _build_roles_from_yaml(
     yaml_config: dict[str, Any], blocks_by_sid: dict[str, ContextBlock]
-) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Parse prep_roles.yaml into (mock_cycle, later) entry lists."""
-    mock_cycle: list[dict[str, str]] = []
+    mock_cycle: list[dict[str, Any]] = []
     for entry in yaml_config.get("mock_cycle", []):
         sid = str(entry.get("id", ""))
         archetype = entry.get(
@@ -241,10 +194,15 @@ def _build_roles_from_yaml(
             _archetype_from_block(blocks_by_sid[sid]) if sid in blocks_by_sid else "",
         )
         mock_cycle.append(
-            {"id": sid, "label": str(entry.get("label", sid)), "archetype": archetype}
+            {
+                "id": sid,
+                "label": str(entry.get("label", sid)),
+                "archetype": archetype,
+                "llm": entry.get("llm", {}),
+            }
         )
 
-    later: list[dict[str, str]] = []
+    later: list[dict[str, Any]] = []
     for entry in yaml_config.get("later", []):
         sid = str(entry.get("id", ""))
         archetype = entry.get(
@@ -263,6 +221,34 @@ def _build_roles_from_yaml(
     return mock_cycle, later
 
 
+def validate_prep_roles_yaml(
+    yaml_config: dict[str, Any], blocks_by_sid: dict[str, ContextBlock]
+) -> None:
+    """Validate prep_roles.yaml ids against parsed context blocks. Raises ValueError."""
+    available = sorted(blocks_by_sid.keys())
+    for entry in yaml_config.get("mock_cycle", []):
+        sid = str(entry.get("id", ""))
+        if sid not in blocks_by_sid:
+            raise ValueError(
+                f"prep_roles.yaml: unknown id {sid!r} in mock_cycle — "
+                f"available: {available}"
+            )
+    for entry in yaml_config.get("later", []):
+        sid = str(entry.get("id", ""))
+        if sid not in blocks_by_sid:
+            raise ValueError(
+                f"prep_roles.yaml: unknown id {sid!r} in later — "
+                f"available: {available}"
+            )
+    mock_cycle_ids = {str(e.get("id", "")) for e in yaml_config.get("mock_cycle", [])}
+    for sid in yaml_config.get("mock_order", []):
+        if str(sid) not in mock_cycle_ids:
+            raise ValueError(
+                f"prep_roles.yaml: mock_order id {sid!r} not in mock_cycle — "
+                f"mock_cycle ids: {sorted(mock_cycle_ids)}"
+            )
+
+
 def _md_cell(text: str) -> str:
     display = text.strip() if text.strip() else "—"
     return display.replace("|", "\\|")
@@ -275,11 +261,11 @@ def render_draft_md(
     claims_path: Path,
     blocks: list[ContextBlock],
     all_gaps: list[ClaimsGapEntry],
-    mock_cycle: list[dict[str, str]],
-    later_list: list[dict[str, str]],
+    mock_cycle: list[dict[str, Any]],
+    later_list: list[dict[str, Any]],
     mock_order: list[str],
     prep_roles_config_label: str,
-    is_auto: bool = False,
+    refine_config: dict[str, Any] | None = None,
 ) -> str:
     """Render personas.draft.md from parsed inputs."""
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -351,7 +337,19 @@ def render_draft_md(
         if block.refnr:
             meta_parts.append(f"**refnr:** {block.refnr}")
         lines.append(" · ".join(meta_parts))
-        lines.extend(["", "**JD focus:** _TODO — refine from jd_excerpt_", ""])
+        jd_excerpt = block.jd_excerpt[:400] if block.jd_excerpt else "—"
+        lines.extend(["", f"**JD excerpt:** {jd_excerpt}", ""])
+        llm_hints = entry.get("llm", {})
+        if llm_hints:
+            hint_lines = [f"<!-- jobfit:prep-personas:llm-hints:{sid}"]
+            for key, val in llm_hints.items():
+                if isinstance(val, list):
+                    hint_lines.append(f"{key}: {', '.join(str(v) for v in val)}")
+                elif val is not None:
+                    hint_lines.append(f"{key}: {val}")
+            hint_lines.append("/jobfit:prep-personas:llm-hints -->")
+            lines.extend(hint_lines)
+        lines.extend(["**JD focus:** _TODO — paraphrase JD excerpt above_", ""])
         lines.extend(
             ["**Lead from claims:** _TODO — refine: 3–5 ok claims / Quick reference themes_", ""]
         )
@@ -388,12 +386,34 @@ def render_draft_md(
             label_str = f"**{sid} — {entry['label']}**"
             if archetype:
                 label_str += f" ({archetype})"
-            lines.append(f"{label_str} — {reason}")
+            lines.append(label_str)
+            company_line = f"**Company:** {block.company}" if block.company else "**Company:** —"
+            lines.append(company_line)
+            later_meta = [f"**prep_label:** {block.prep_label}"]
+            if block.refnr:
+                later_meta.append(f"**refnr:** {block.refnr}")
+            lines.append(" · ".join(later_meta))
+            lines.append(reason)
+            lines.append("")
 
     # Anchors skeleton
     lines.extend(["", "---", "", "## Anchors", "", "| Job | One-line anchor |", "|---|---|"])
     for entry in mock_cycle:
         lines.append(f"| {entry['id']} | _TODO — refine_ |")
+
+    # Refine config from yaml (before closing llm-input marker)
+    if refine_config:
+        rc_lines = ["", "<!-- jobfit:prep-personas:refine-config"]
+        for key, val in refine_config.items():
+            str_val = str(val)
+            if "\n" in str_val:
+                rc_lines.append(f"{key}: |")
+                for line in str_val.splitlines():
+                    rc_lines.append(f"  {line}")
+            else:
+                rc_lines.append(f"{key}: {str_val}")
+        rc_lines.append("/jobfit:prep-personas:refine-config -->")
+        lines.extend(rc_lines)
 
     lines.extend([
         "",
@@ -408,13 +428,6 @@ def render_draft_md(
         "- See docs/prep-personas-review.md.",
         "",
     ])
-
-    if is_auto:
-        lines.append(
-            "<!-- auto-selection: mock_cycle from prep_label∈fit,stretch (≤3); "
-            "later from brand-only/skip-for-prep -->"
-        )
-        lines.append("")
 
     return "\n".join(lines)
 
@@ -445,25 +458,21 @@ def run(
     all_gaps = parse_claims_gaps(claims_text)
     blocks_by_sid = {b.sid: b for b in blocks}
 
-    prep_roles_config: dict[str, Any] | None = None
-    config_label = "auto"
-    if prep_roles_path and prep_roles_path.is_file():
-        prep_roles_config = load_prep_roles_yaml(prep_roles_path)
-        if prep_roles_config:
-            config_label = prep_roles_path.as_posix()
-
-    if prep_roles_config:
-        mock_cycle, later_list = _build_roles_from_yaml(prep_roles_config, blocks_by_sid)
-        mock_order: list[str] = prep_roles_config.get(
-            "mock_order", [e["id"] for e in mock_cycle]
+    # Option A: yaml is required for draft
+    yaml_path = prep_roles_path or default_prep_roles_yaml_path(role_slug)
+    prep_roles_config = load_prep_roles_yaml(yaml_path)
+    if prep_roles_config is None:
+        raise FileNotFoundError(
+            f"prep_roles.yaml not found at {yaml_path} — "
+            f"copy {USER_DATA_DIR / role_slug / 'input' / 'prep_roles.yaml.example'}"
         )
-        is_auto = False
-    else:
-        auto = auto_select_roles(blocks)
-        mock_cycle = auto["mock_cycle"]
-        later_list = auto["later"]
-        mock_order = auto["mock_order"]
-        is_auto = True
+    validate_prep_roles_yaml(prep_roles_config, blocks_by_sid)
+    mock_cycle, later_list = _build_roles_from_yaml(prep_roles_config, blocks_by_sid)
+    mock_order: list[str] = [str(sid) for sid in prep_roles_config.get(
+        "mock_order", [e["id"] for e in mock_cycle]
+    )]
+    refine_config: dict[str, Any] | None = prep_roles_config.get("refine")
+    config_label = yaml_path.as_posix()
 
     summary: dict[str, Any] = {
         "role": role_slug,
@@ -500,7 +509,7 @@ def run(
         later_list=later_list,
         mock_order=mock_order,
         prep_roles_config_label=config_label,
-        is_auto=is_auto,
+        refine_config=refine_config,
     )
 
     out_path.parent.mkdir(parents=True, exist_ok=True)

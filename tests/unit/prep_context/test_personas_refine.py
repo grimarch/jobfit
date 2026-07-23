@@ -10,6 +10,7 @@ import pytest
 from jobfit.prep_context.personas_refine import (
     _extract_claims_excerpt,
     _extract_gap_lines,
+    _extract_prep_config,
     build_user_prompt,
     default_draft_input_path,
     default_llm_path,
@@ -155,6 +156,42 @@ def test_build_user_prompt_contains_sections():
     assert "CLAIMS SoT" in user
     assert "Production AWS" in user  # from do not claim
     assert "GCP primary" in user  # from gaps
+    assert "PREP CONFIG" not in user  # no hints in plain draft
+
+
+def test_build_user_prompt_includes_prep_config_when_hints_present():
+    draft_with_hints = (
+        _MIN_DRAFT
+        + "\n<!-- jobfit:prep-personas:llm-hints:S1\nlead_themes: CI/CD\nlanguage: EN\n/jobfit:prep-personas:llm-hints -->\n"
+    )
+    user = build_user_prompt(cv_text="CV body", claims_text=_MIN_CLAIMS, draft_text=draft_with_hints)
+    assert "PREP CONFIG" in user
+    assert "lead_themes: CI/CD" in user
+    assert "language: EN" in user
+
+
+def test_extract_prep_config_empty_when_no_hints():
+    result = _extract_prep_config(_MIN_DRAFT)
+    assert result == ""
+
+
+def test_extract_prep_config_extracts_hints():
+    draft = (
+        _MIN_DRAFT
+        + "\n<!-- jobfit:prep-personas:llm-hints:S1\nlead_themes: CI/CD\n/jobfit:prep-personas:llm-hints -->\n"
+    )
+    result = _extract_prep_config(draft)
+    assert "### S1" in result
+    assert "lead_themes: CI/CD" in result
+
+
+def test_extract_prep_config_extracts_refine_config():
+    draft = (
+        _MIN_DRAFT
+        + "\n<!-- jobfit:prep-personas:refine-config\nstory_numbering: standard\n/jobfit:prep-personas:refine-config -->\n"
+    )
+    result = _extract_prep_config(draft)
+    assert "story_numbering: standard" in result
 
 
 def test_extract_claims_excerpt_has_gaps_and_dnc():
@@ -204,17 +241,31 @@ def test_extract_gap_lines():
 # validate_refine_output
 # ---------------------------------------------------------------------------
 
+# Fully-compliant refined output that must pass all structure + P-03/P-04 checks
+_CLEAN_REFINED = (
+    "# Prep roles (devops)\n\n"
+    "**Draft** generated: 2026-07-22T00:00:00Z\n\n"
+    "<!-- jobfit:prep-personas:llm-input -->\n\n"
+    "| Prep role | Job | Company | prep_label | Archetype | Primary gaps |\n"
+    "|---|---|---|---|---|---|\n"
+    "| Primary | S1 — DevOps | TestCo | fit | startup | AWS |\n\n"
+    "## Mock order\n\n"
+    "1. **S1** (Primary) — fit\n\n"
+    "---\n\n"
+    "## S1 — Primary (startup)\n\n"
+    "**Gaps for this job:**\n"
+    "- **AWS** — Do not claim: Production AWS. Say: GCP primary\n\n"
+    "---\n\n"
+    "## Anchors\n\n"
+    "| Job | One-line anchor |\n"
+    "|---|---|\n"
+    "| S1 | GitLab CI/CD 45→10 min |\n\n"
+    "<!-- /jobfit:prep-personas:llm-input -->\n"
+)
+
 
 def test_validate_refine_output_clean():
-    refined = (
-        "# Prep roles (devops)\n\n**Draft** generated: x\n\n"
-        "<!-- jobfit:prep-personas:llm-input -->\n\n"
-        "## S1 — Primary (startup)\n\n"
-        "**Gaps for this job:**\n"
-        "- **AWS** — Do not claim: Production AWS. Say: GCP primary\n\n"
-        "<!-- /jobfit:prep-personas:llm-input -->\n"
-    )
-    warnings = validate_refine_output(_MIN_DRAFT, refined)
+    warnings = validate_refine_output(_MIN_DRAFT, _CLEAN_REFINED)
     assert warnings == []
 
 
@@ -256,6 +307,61 @@ def test_validate_refine_output_company_placeholder():
     )
     warnings = validate_refine_output(_MIN_DRAFT, refined)
     assert any("COMPANY" in w for w in warnings)
+
+
+def test_validate_refine_output_wrong_title():
+    """P-03: H1 must start with '# Prep roles ('."""
+    refined = _CLEAN_REFINED.replace(
+        "# Prep roles (devops)", "# PREP-PERSONAS: DevOps Engineer — Interview Ready"
+    )
+    warnings = validate_refine_output(_MIN_DRAFT, refined)
+    assert any("H1" in w for w in warnings)
+
+
+def test_validate_refine_output_pii_placeholder():
+    """P-03: PII placeholders must trigger a warning."""
+    refined = _CLEAN_REFINED + "\n[CANDIDATE_NAME] is the candidate.\n"
+    warnings = validate_refine_output(_MIN_DRAFT, refined)
+    assert any("CANDIDATE_NAME" in w for w in warnings)
+
+
+def test_validate_refine_output_missing_iso_timestamp():
+    """P-03: Draft generated line must carry ISO-8601 timestamp."""
+    refined = _CLEAN_REFINED.replace(
+        "**Draft** generated: 2026-07-22T00:00:00Z",
+        "**Draft** generated: sometime last week",
+    )
+    warnings = validate_refine_output(_MIN_DRAFT, refined)
+    assert any("ISO-8601" in w for w in warnings)
+
+
+def test_validate_refine_output_missing_mock_order():
+    """P-04: ## Mock order section must be present when draft has it."""
+    refined = _CLEAN_REFINED.replace("## Mock order\n\n1. **S1** (Primary) — fit\n\n", "")
+    warnings = validate_refine_output(_MIN_DRAFT, refined)
+    assert any("Mock order" in w for w in warnings)
+
+
+def test_validate_refine_output_missing_summary_table():
+    """P-04: Summary table header must be present when draft has it."""
+    refined = _CLEAN_REFINED.replace(
+        "| Prep role | Job | Company | prep_label | Archetype | Primary gaps |\n"
+        "|---|---|---|---|---|---|\n"
+        "| Primary | S1 — DevOps | TestCo | fit | startup | AWS |\n\n",
+        "",
+    )
+    warnings = validate_refine_output(_MIN_DRAFT, refined)
+    assert any("Summary table" in w for w in warnings)
+
+
+def test_validate_refine_output_missing_anchors():
+    """P-04: Anchors table header must be present when draft has it."""
+    refined = _CLEAN_REFINED.replace(
+        "## Anchors\n\n| Job | One-line anchor |\n|---|---|\n| S1 | GitLab CI/CD 45→10 min |\n\n",
+        "",
+    )
+    warnings = validate_refine_output(_MIN_DRAFT, refined)
+    assert any("Anchors" in w for w in warnings)
 
 
 # ---------------------------------------------------------------------------

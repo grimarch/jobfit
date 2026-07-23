@@ -3,7 +3,7 @@
 **Draft** generated: TIMESTAMP
 **Context source:** `tests/fixtures/prep/devops/context_mini.md`
 **Claims source:** `tests/fixtures/prep/devops/claims_mini.md`
-**Prep roles config:** `auto`
+**Prep roles config:** `tests/fixtures/prep/devops/prep_roles_mini.yaml`
 
 > Machine draft — not for mock interviews. Run `prep-personas refine` then human verify.
 
@@ -32,7 +32,9 @@
 **Company:** TestCo
 **prep_label:** fit · **refnr:** mini-001
 
-**JD focus:** _TODO — refine from jd_excerpt_
+**JD excerpt:** Build the infrastructure for live AI products.
+
+**JD focus:** _TODO — paraphrase JD excerpt above_
 
 **Lead from claims:** _TODO — refine: 3–5 ok claims / Quick reference themes_
 
@@ -53,7 +55,9 @@
 **Company:** HostingCo
 **prep_label:** stretch · **refnr:** mini-004
 
-**JD focus:** _TODO — refine from jd_excerpt_
+**JD excerpt:** Design and operate customer platforms on private cloud and Azure.
+
+**JD focus:** _TODO — paraphrase JD excerpt above_
 
 **Lead from claims:** _TODO — refine: 3–5 ok claims / Quick reference themes_
 
@@ -75,7 +79,9 @@
 **Company:** PlatCo
 **prep_label:** stretch · **refnr:** mini-002
 
-**JD focus:** _TODO — refine from jd_excerpt_
+**JD excerpt:** Own platform foundations end-to-end including AWS and observability.
+
+**JD focus:** _TODO — paraphrase JD excerpt above_
 
 **Lead from claims:** _TODO — refine: 3–5 ok claims / Quick reference themes_
 
@@ -109,5 +115,3 @@
 - `prep-personas refine` reads content between llm-input markers.
 - Human promotes `personas.llm.md` → `personas.md` after verify.
 - See docs/prep-personas-review.md.
-
-<!-- auto-selection: mock_cycle from prep_label∈fit,stretch (≤3); later from brand-only/skip-for-prep -->

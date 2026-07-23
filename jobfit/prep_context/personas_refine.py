@@ -23,6 +23,14 @@ _CLAIMS_GAPS_BEGIN = "<!-- jobfit:prep-claims:gaps -->"
 _CLAIMS_GAPS_END = "<!-- /jobfit:prep-claims:gaps -->"
 _SYSTEM_MARKER = "## System / user prompt"
 _AFTER_LLM_MARKER = "## After LLM"
+_LLM_HINTS_RE = re.compile(
+    r"<!-- jobfit:prep-personas:llm-hints:(\w+)\n(.*?)/jobfit:prep-personas:llm-hints -->",
+    re.DOTALL,
+)
+_REFINE_CONFIG_RE = re.compile(
+    r"<!-- jobfit:prep-personas:refine-config\n(.*?)/jobfit:prep-personas:refine-config -->",
+    re.DOTALL,
+)
 
 
 def default_llm_path(role_slug: str) -> Path:
@@ -83,25 +91,48 @@ def _extract_claims_excerpt(claims_text: str) -> str:
     return "\n\n".join(parts)
 
 
+def _extract_prep_config(draft_text: str) -> str:
+    """Extract PREP CONFIG from llm-hints + refine-config comments in draft. Empty if absent."""
+    parts: list[str] = []
+    for m in _LLM_HINTS_RE.finditer(draft_text):
+        sid = m.group(1)
+        body = m.group(2).strip()
+        if body:
+            parts.append(f"### {sid}\n{body}")
+    refine_m = _REFINE_CONFIG_RE.search(draft_text)
+    if refine_m:
+        body = refine_m.group(1).strip()
+        if body:
+            parts.append(body)
+    return "\n\n".join(parts)
+
+
 def build_user_prompt(*, cv_text: str, claims_text: str, draft_text: str) -> str:
     claims_excerpt = _extract_claims_excerpt(claims_text)
-    return "\n".join(
-        [
-            "## CANDIDATE CV (read-only context — do not add employers/tools not in CV)",
+    prep_config = _extract_prep_config(draft_text)
+    sections = [
+        "## CANDIDATE CV (read-only context — do not add employers/tools not in CV)",
+        "",
+        cv_text.strip(),
+        "",
+        "## CLAIMS SoT (honest lines — do not contradict)",
+        "",
+        claims_excerpt,
+        "",
+        "## PERSONAS DRAFT (preserve structure; gaps lines must stay verbatim)",
+        "",
+        draft_text.strip(),
+        "",
+    ]
+    if prep_config:
+        sections.extend([
+            "## PREP CONFIG (guidance only — CV and claims override on conflict)",
             "",
-            cv_text.strip(),
+            prep_config,
             "",
-            "## CLAIMS SoT (honest lines — do not contradict)",
-            "",
-            claims_excerpt,
-            "",
-            "## PERSONAS DRAFT (preserve structure; gaps lines must stay verbatim)",
-            "",
-            draft_text.strip(),
-            "",
-            "Return the full refined markdown document only. No preamble.",
-        ]
-    )
+        ])
+    sections.append("Return the full refined markdown document only. No preamble.")
+    return "\n".join(sections)
 
 
 def strip_markdown_fences(text: str) -> str:
@@ -135,6 +166,28 @@ def validate_refine_output(draft_text: str, refined_text: str) -> list[str]:
     if not refined_text.lstrip().startswith("#"):
         warnings.append("Output does not start with a markdown heading")
 
+    # P-03 / R-04: H1 must match draft H1 exactly (role-agnostic)
+    first_line = refined_text.lstrip().split("\n")[0]
+    draft_h1_match = re.search(r"^(# Prep roles \([^)]+\))", draft_text, re.MULTILINE)
+    if draft_h1_match:
+        expected_h1 = draft_h1_match.group(1)
+        if first_line != expected_h1:
+            warnings.append(f"H1 should match draft '{expected_h1}' — got: {first_line[:60]}")
+    elif not first_line.startswith("# Prep roles ("):
+        warnings.append(f"H1 should start with '# Prep roles (' — got: {first_line[:60]}")
+
+    # P-03: PII placeholders must not appear in output
+    for placeholder in ("[CANDIDATE_NAME]", "[EMAIL]"):
+        if placeholder in refined_text:
+            warnings.append(f"PII placeholder {placeholder!r} in output — remove before sharing")
+
+    # P-03: Draft header must carry ISO-8601 timestamp
+    draft_gen_match = re.search(r"\*\*Draft\*\* generated:", refined_text)
+    if draft_gen_match:
+        draft_line = refined_text[draft_gen_match.start():].split("\n")[0]
+        if not re.search(r"\d{4}-\d{2}-\d{2}T", draft_line):
+            warnings.append("**Draft** generated: line missing ISO-8601 timestamp")
+
     if _LLM_INPUT_BEGIN in draft_text and _LLM_INPUT_BEGIN not in refined_text:
         warnings.append("llm-input begin marker missing in LLM output")
     if _LLM_INPUT_END in draft_text and _LLM_INPUT_END not in refined_text:
@@ -155,6 +208,21 @@ def validate_refine_output(draft_text: str, refined_text: str) -> list[str]:
 
     if "[COMPANY]" in refined_text:
         warnings.append("Unreplaced [COMPANY] placeholder in output")
+
+    # P-04: structural checks inside llm-input markers
+    draft_body = extract_llm_input(draft_text)
+
+    if "| Prep role | Job | Company |" in draft_body and "| Prep role | Job | Company |" not in refined_text:
+        warnings.append("Summary table missing in LLM output (| Prep role | Job | Company |)")
+
+    if "## Mock order" in draft_body and "## Mock order" not in refined_text:
+        warnings.append("## Mock order section missing in LLM output")
+
+    if "| Job | One-line anchor |" in draft_body and "| Job | One-line anchor |" not in refined_text:
+        warnings.append("Anchors table missing in LLM output (| Job | One-line anchor |)")
+
+    if "## Later jobs" in draft_body and "## Later jobs" not in refined_text:
+        warnings.append("## Later jobs section missing in LLM output")
 
     return warnings
 

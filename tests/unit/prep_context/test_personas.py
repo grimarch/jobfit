@@ -11,7 +11,7 @@ import yaml
 from jobfit.prep_context.context_parse import ContextBlock, parse_context_blocks
 from jobfit.prep_context.personas import (
     ClaimsGapEntry,
-    auto_select_roles,
+    _build_roles_from_yaml,
     default_draft_path,
     default_claims_path,
     extract_llm_input,
@@ -24,18 +24,31 @@ from jobfit.prep_context.personas import (
     render_draft_md,
     require_reviewed_claims,
     run,
+    validate_prep_roles_yaml,
 )
 
 _FIXTURES = Path("tests/fixtures/prep/devops")
 _CONTEXT_MINI = _FIXTURES / "context_mini.md"
 _CLAIMS_MINI = _FIXTURES / "claims_mini.md"
 _GOLDEN = _FIXTURES / "personas.draft.golden.md"
+_PREP_ROLES_MINI = _FIXTURES / "prep_roles_mini.yaml"
 
 _TIMESTAMP_RE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
 
 
 def _norm(text: str) -> str:
     return _TIMESTAMP_RE.sub("TIMESTAMP", text)
+
+
+def _mini_roles():
+    """Load mini yaml fixture → (mock_cycle, later_list, mock_order, yaml_config)."""
+    yaml_config = load_prep_roles_yaml(_PREP_ROLES_MINI)
+    assert yaml_config is not None
+    blocks = parse_context_blocks(_CONTEXT_MINI.read_text(encoding="utf-8"))
+    blocks_by_sid = {b.sid: b for b in blocks}
+    mc, later = _build_roles_from_yaml(yaml_config, blocks_by_sid)
+    order = [str(sid) for sid in yaml_config.get("mock_order", [e["id"] for e in mc])]
+    return mc, later, order, yaml_config
 
 
 # ---------------------------------------------------------------------------
@@ -163,43 +176,15 @@ def test_filter_gaps_skill_alias_golang():
 
 
 # ---------------------------------------------------------------------------
-# prep roles selection tests
+# YAML loader and validator
 # ---------------------------------------------------------------------------
-
-
-def test_auto_select_roles_fit_first():
-    blocks = [
-        ContextBlock(sid="S1", prep_label="fit", company_stage="startup", industry="AI"),
-        ContextBlock(sid="S4", prep_label="stretch", company_stage="mid", industry="Cloud"),
-        ContextBlock(sid="S2", prep_label="stretch", company_stage="startup", industry="SaaS"),
-    ]
-    result = auto_select_roles(blocks)
-    ids = [e["id"] for e in result["mock_cycle"]]
-    assert ids[0] == "S1"  # fit first
-    assert set(ids[1:]) == {"S4", "S2"}
-    assert result["later"] == []
-
-
-def test_auto_select_roles_brand_only_to_later():
-    blocks = [
-        ContextBlock(sid="S1", prep_label="fit"),
-        ContextBlock(sid="S3", prep_label="brand-only"),
-    ]
-    result = auto_select_roles(blocks)
-    assert [e["id"] for e in result["mock_cycle"]] == ["S1"]
-    assert result["later"][0]["id"] == "S3"
-
-
-def test_auto_select_roles_caps_at_three():
-    blocks = [ContextBlock(sid=f"S{i}", prep_label="fit") for i in range(5)]
-    result = auto_select_roles(blocks)
-    assert len(result["mock_cycle"]) == 3
 
 
 def test_load_prep_roles_yaml(tmp_path: Path):
     yaml_file = tmp_path / "prep_roles.yaml"
     yaml_file.write_text(
         "mock_cycle:\n  - id: S1\n    label: Primary\n    archetype: startup\n"
+        "later: []\n"
         "mock_order: [S1]\n",
         encoding="utf-8",
     )
@@ -211,6 +196,41 @@ def test_load_prep_roles_yaml(tmp_path: Path):
 
 def test_load_prep_roles_yaml_missing_returns_none(tmp_path: Path):
     assert load_prep_roles_yaml(tmp_path / "nonexistent.yaml") is None
+
+
+def test_validate_prep_roles_yaml_passes(tmp_path: Path):
+    if not _CONTEXT_MINI.is_file():
+        pytest.skip("context_mini.md fixture missing")
+    blocks = parse_context_blocks(_CONTEXT_MINI.read_text(encoding="utf-8"))
+    blocks_by_sid = {b.sid: b for b in blocks}
+    yaml_config = {"mock_cycle": [{"id": "S1"}], "later": [], "mock_order": ["S1"]}
+    validate_prep_roles_yaml(yaml_config, blocks_by_sid)  # must not raise
+
+
+def test_yaml_unknown_sid_raises(tmp_path: Path):
+    """Unknown S* id in yaml must raise ValueError with available ids."""
+    if not _CONTEXT_MINI.is_file():
+        pytest.skip("context_mini.md fixture missing")
+    blocks = parse_context_blocks(_CONTEXT_MINI.read_text(encoding="utf-8"))
+    blocks_by_sid = {b.sid: b for b in blocks}
+    yaml_config = {"mock_cycle": [{"id": "S9"}], "later": [], "mock_order": ["S9"]}
+    with pytest.raises(ValueError, match="S9"):
+        validate_prep_roles_yaml(yaml_config, blocks_by_sid)
+
+
+def test_yaml_unknown_mock_order_id_raises(tmp_path: Path):
+    """mock_order id not in mock_cycle must raise ValueError."""
+    if not _CONTEXT_MINI.is_file():
+        pytest.skip("context_mini.md fixture missing")
+    blocks = parse_context_blocks(_CONTEXT_MINI.read_text(encoding="utf-8"))
+    blocks_by_sid = {b.sid: b for b in blocks}
+    yaml_config = {
+        "mock_cycle": [{"id": "S1"}, {"id": "S4"}],
+        "later": [],
+        "mock_order": ["S1", "S2"],  # S2 not in mock_cycle
+    }
+    with pytest.raises(ValueError, match="mock_order"):
+        validate_prep_roles_yaml(yaml_config, blocks_by_sid)
 
 
 # ---------------------------------------------------------------------------
@@ -234,21 +254,14 @@ def test_require_reviewed_claims_raises_on_missing():
 
 def test_render_draft_md_golden():
     """Compare render output to golden snapshot (normalize timestamps)."""
-    if not _CONTEXT_MINI.is_file() or not _CLAIMS_MINI.is_file():
+    if not _CONTEXT_MINI.is_file() or not _CLAIMS_MINI.is_file() or not _PREP_ROLES_MINI.is_file():
         pytest.skip("mini fixtures missing")
 
     context_text = _CONTEXT_MINI.read_text(encoding="utf-8")
     claims_text = _CLAIMS_MINI.read_text(encoding="utf-8")
-
-    from jobfit.prep_context.personas import (
-        auto_select_roles,
-        parse_claims_gaps,
-        parse_context_blocks,
-    )
-
     blocks = parse_context_blocks(context_text)
     all_gaps = parse_claims_gaps(claims_text)
-    auto = auto_select_roles(blocks)
+    mock_cycle, later_list, mock_order, _ = _mini_roles()
 
     result = render_draft_md(
         role_slug="devops",
@@ -256,11 +269,10 @@ def test_render_draft_md_golden():
         claims_path=_CLAIMS_MINI,
         blocks=blocks,
         all_gaps=all_gaps,
-        mock_cycle=auto["mock_cycle"],
-        later_list=auto["later"],
-        mock_order=auto["mock_order"],
-        prep_roles_config_label="auto",
-        is_auto=True,
+        mock_cycle=mock_cycle,
+        later_list=later_list,
+        mock_order=mock_order,
+        prep_roles_config_label=_PREP_ROLES_MINI.as_posix(),
     )
 
     normalized = _norm(result)
@@ -274,17 +286,18 @@ def test_render_draft_md_golden():
 
 
 # ---------------------------------------------------------------------------
-# gaps_in_llm_input: gap lines must be inside llm-input markers
+# render_draft_md feature tests
 # ---------------------------------------------------------------------------
 
 
-def test_gaps_in_llm_input():
-    if not _CONTEXT_MINI.is_file() or not _CLAIMS_MINI.is_file():
+def test_render_draft_md_includes_jd_excerpt():
+    """Each mock-cycle block must contain the JD excerpt from the context block."""
+    if not _CONTEXT_MINI.is_file() or not _CLAIMS_MINI.is_file() or not _PREP_ROLES_MINI.is_file():
         pytest.skip("mini fixtures missing")
 
     blocks = parse_context_blocks(_CONTEXT_MINI.read_text(encoding="utf-8"))
     all_gaps = parse_claims_gaps(_CLAIMS_MINI.read_text(encoding="utf-8"))
-    auto = auto_select_roles(blocks)
+    mock_cycle, later_list, mock_order, _ = _mini_roles()
 
     result = render_draft_md(
         role_slug="devops",
@@ -292,11 +305,144 @@ def test_gaps_in_llm_input():
         claims_path=_CLAIMS_MINI,
         blocks=blocks,
         all_gaps=all_gaps,
-        mock_cycle=auto["mock_cycle"],
-        later_list=auto["later"],
-        mock_order=auto["mock_order"],
-        prep_roles_config_label="auto",
-        is_auto=True,
+        mock_cycle=mock_cycle,
+        later_list=later_list,
+        mock_order=mock_order,
+        prep_roles_config_label=_PREP_ROLES_MINI.as_posix(),
+    )
+
+    assert "**JD excerpt:** Build the infrastructure for live AI products." in result
+    assert "**JD excerpt:** Design and operate customer platforms on private cloud and Azure." in result
+    assert "**JD focus:** _TODO — paraphrase JD excerpt above_" in result
+    assert "_TODO — refine from jd_excerpt_" not in result
+
+
+def test_render_draft_later_includes_refnr():
+    """Later section must include company and refnr, not just a one-liner."""
+    block_fit = ContextBlock(
+        sid="S1",
+        prep_label="fit",
+        company="FitCo",
+        refnr="ref-001",
+        company_stage="startup",
+        industry="SaaS",
+    )
+    block_later = ContextBlock(
+        sid="S3",
+        prep_label="brand-only",
+        company="BrandCo",
+        refnr="ref-003",
+        company_stage="enterprise",
+        industry="FinTech",
+    )
+    mock_cycle = [{"id": "S1", "label": "Primary", "archetype": "startup / SaaS", "llm": {}}]
+    later_list = [{"id": "S3", "label": "Later", "archetype": "enterprise / FinTech", "reason": "prep_label: brand-only"}]
+    result = render_draft_md(
+        role_slug="test",
+        context_path=Path("context.md"),
+        claims_path=Path("claims.md"),
+        blocks=[block_fit, block_later],
+        all_gaps=[],
+        mock_cycle=mock_cycle,
+        later_list=later_list,
+        mock_order=["S1"],
+        prep_roles_config_label="test/prep_roles.yaml",
+    )
+    assert "## Later jobs" in result
+    assert "**Company:** BrandCo" in result
+    assert "**refnr:** ref-003" in result
+    assert "**prep_label:** brand-only" in result
+
+
+def test_draft_renders_llm_hints_comments():
+    """When yaml has llm: hints, draft must contain <!-- jobfit:prep-personas:llm-hints:SX -->."""
+    if not _CONTEXT_MINI.is_file() or not _CLAIMS_MINI.is_file():
+        pytest.skip("mini fixtures missing")
+    blocks = parse_context_blocks(_CONTEXT_MINI.read_text(encoding="utf-8"))
+    blocks_by_sid = {b.sid: b for b in blocks}
+    all_gaps = parse_claims_gaps(_CLAIMS_MINI.read_text(encoding="utf-8"))
+
+    yaml_with_hints = {
+        "mock_cycle": [
+            {"id": "S1", "label": "Primary", "llm": {"lead_themes": ["CI/CD", "Terraform"], "language": "EN technical"}},
+            {"id": "S4", "label": "Stretch", "llm": {"language": "DE primary"}},
+            {"id": "S2", "label": "Stretch 2"},
+        ],
+        "later": [],
+        "mock_order": ["S1", "S4", "S2"],
+    }
+    mock_cycle, later_list = _build_roles_from_yaml(yaml_with_hints, blocks_by_sid)
+    result = render_draft_md(
+        role_slug="devops",
+        context_path=_CONTEXT_MINI,
+        claims_path=_CLAIMS_MINI,
+        blocks=blocks,
+        all_gaps=all_gaps,
+        mock_cycle=mock_cycle,
+        later_list=later_list,
+        mock_order=["S1", "S4", "S2"],
+        prep_roles_config_label="prep_roles.yaml",
+    )
+    assert "<!-- jobfit:prep-personas:llm-hints:S1" in result
+    assert "lead_themes: CI/CD, Terraform" in result
+    assert "language: EN technical" in result
+    assert "<!-- jobfit:prep-personas:llm-hints:S4" in result
+    assert "language: DE primary" in result
+    # S2 has no llm hints — no comment for it
+    assert "<!-- jobfit:prep-personas:llm-hints:S2" not in result
+    assert "/jobfit:prep-personas:llm-hints -->" in result
+
+
+def test_draft_renders_refine_config_comment():
+    """When yaml has refine: block, draft contains <!-- jobfit:prep-personas:refine-config -->."""
+    if not _CONTEXT_MINI.is_file() or not _CLAIMS_MINI.is_file():
+        pytest.skip("mini fixtures missing")
+    blocks = parse_context_blocks(_CONTEXT_MINI.read_text(encoding="utf-8"))
+    blocks_by_sid = {b.sid: b for b in blocks}
+    all_gaps = parse_claims_gaps(_CLAIMS_MINI.read_text(encoding="utf-8"))
+
+    yaml_cfg = {
+        "mock_cycle": [{"id": "S1", "label": "Primary"}],
+        "later": [],
+        "mock_order": ["S1"],
+        "refine": {"story_numbering": "1 = CI/CD LMS\n2 = Terraform", "notes": "mid DevOps"},
+    }
+    mock_cycle, later_list = _build_roles_from_yaml(yaml_cfg, blocks_by_sid)
+    result = render_draft_md(
+        role_slug="devops",
+        context_path=_CONTEXT_MINI,
+        claims_path=_CLAIMS_MINI,
+        blocks=blocks,
+        all_gaps=all_gaps,
+        mock_cycle=mock_cycle,
+        later_list=later_list,
+        mock_order=["S1"],
+        prep_roles_config_label="prep_roles.yaml",
+        refine_config=yaml_cfg["refine"],
+    )
+    assert "<!-- jobfit:prep-personas:refine-config" in result
+    assert "story_numbering:" in result
+    assert "/jobfit:prep-personas:refine-config -->" in result
+
+
+def test_gaps_in_llm_input():
+    if not _CONTEXT_MINI.is_file() or not _CLAIMS_MINI.is_file() or not _PREP_ROLES_MINI.is_file():
+        pytest.skip("mini fixtures missing")
+
+    blocks = parse_context_blocks(_CONTEXT_MINI.read_text(encoding="utf-8"))
+    all_gaps = parse_claims_gaps(_CLAIMS_MINI.read_text(encoding="utf-8"))
+    mock_cycle, later_list, mock_order, _ = _mini_roles()
+
+    result = render_draft_md(
+        role_slug="devops",
+        context_path=_CONTEXT_MINI,
+        claims_path=_CLAIMS_MINI,
+        blocks=blocks,
+        all_gaps=all_gaps,
+        mock_cycle=mock_cycle,
+        later_list=later_list,
+        mock_order=mock_order,
+        prep_roles_config_label=_PREP_ROLES_MINI.as_posix(),
     )
 
     llm_body = extract_llm_input(result)
@@ -305,12 +451,28 @@ def test_gaps_in_llm_input():
 
 
 # ---------------------------------------------------------------------------
-# run() integration — file write and dry-run
+# run() — yaml required (Option A)
 # ---------------------------------------------------------------------------
 
 
-def test_run_dry_run(tmp_path: Path):
+def test_draft_fails_without_prep_roles_yaml(tmp_path: Path):
+    """Option A: run() must raise FileNotFoundError if yaml is missing."""
     if not _CONTEXT_MINI.is_file() or not _CLAIMS_MINI.is_file():
+        pytest.skip("mini fixtures missing")
+    # Point to a directory with no yaml
+    with pytest.raises(FileNotFoundError, match="prep_roles.yaml"):
+        run(
+            role_slug="devops",
+            context_path=_CONTEXT_MINI,
+            claims_path=_CLAIMS_MINI,
+            out_path=tmp_path / "out.md",
+            prep_roles_path=tmp_path / "prep_roles.yaml",  # does not exist
+            require_reviewed=False,
+        )
+
+
+def test_run_dry_run(tmp_path: Path):
+    if not _CONTEXT_MINI.is_file() or not _CLAIMS_MINI.is_file() or not _PREP_ROLES_MINI.is_file():
         pytest.skip("mini fixtures missing")
     out = tmp_path / "personas.draft.md"
     summary = run(
@@ -318,6 +480,7 @@ def test_run_dry_run(tmp_path: Path):
         context_path=_CONTEXT_MINI,
         claims_path=_CLAIMS_MINI,
         out_path=out,
+        prep_roles_path=_PREP_ROLES_MINI,
         dry_run=True,
         require_reviewed=False,
     )
@@ -326,7 +489,7 @@ def test_run_dry_run(tmp_path: Path):
 
 
 def test_run_writes_draft(tmp_path: Path):
-    if not _CONTEXT_MINI.is_file() or not _CLAIMS_MINI.is_file():
+    if not _CONTEXT_MINI.is_file() or not _CLAIMS_MINI.is_file() or not _PREP_ROLES_MINI.is_file():
         pytest.skip("mini fixtures missing")
     out = tmp_path / "personas.draft.md"
     summary = run(
@@ -334,6 +497,7 @@ def test_run_writes_draft(tmp_path: Path):
         context_path=_CONTEXT_MINI,
         claims_path=_CLAIMS_MINI,
         out_path=out,
+        prep_roles_path=_PREP_ROLES_MINI,
         force=True,
         require_reviewed=False,
     )
@@ -346,8 +510,8 @@ def test_run_writes_draft(tmp_path: Path):
 
 
 def test_run_requires_reviewed_by_default(tmp_path: Path):
-    if not _CONTEXT_MINI.is_file():
-        pytest.skip("context_mini.md fixture missing")
+    if not _CONTEXT_MINI.is_file() or not _PREP_ROLES_MINI.is_file():
+        pytest.skip("fixtures missing")
     claims = tmp_path / "claims_no_review.md"
     claims.write_text("# Claims — no reviewed marker\n", encoding="utf-8")
     with pytest.raises(ValueError, match="Reviewed"):
@@ -356,12 +520,13 @@ def test_run_requires_reviewed_by_default(tmp_path: Path):
             context_path=_CONTEXT_MINI,
             claims_path=claims,
             out_path=tmp_path / "out.md",
+            prep_roles_path=_PREP_ROLES_MINI,
             force=True,
         )
 
 
 def test_run_respects_force_guard(tmp_path: Path):
-    if not _CONTEXT_MINI.is_file() or not _CLAIMS_MINI.is_file():
+    if not _CONTEXT_MINI.is_file() or not _CLAIMS_MINI.is_file() or not _PREP_ROLES_MINI.is_file():
         pytest.skip("mini fixtures missing")
     out = tmp_path / "personas.draft.md"
     out.write_text("existing", encoding="utf-8")
@@ -371,8 +536,28 @@ def test_run_respects_force_guard(tmp_path: Path):
             context_path=_CONTEXT_MINI,
             claims_path=_CLAIMS_MINI,
             out_path=out,
+            prep_roles_path=_PREP_ROLES_MINI,
             require_reviewed=False,
         )
+
+
+def test_run_config_label_shows_yaml_path(tmp_path: Path):
+    """Draft header must show yaml path, not 'auto'."""
+    if not _CONTEXT_MINI.is_file() or not _CLAIMS_MINI.is_file() or not _PREP_ROLES_MINI.is_file():
+        pytest.skip("mini fixtures missing")
+    out = tmp_path / "personas.draft.md"
+    run(
+        role_slug="devops",
+        context_path=_CONTEXT_MINI,
+        claims_path=_CLAIMS_MINI,
+        out_path=out,
+        prep_roles_path=_PREP_ROLES_MINI,
+        force=True,
+        require_reviewed=False,
+    )
+    text = out.read_text(encoding="utf-8")
+    assert "prep_roles_mini.yaml" in text
+    assert "config:** `auto`" not in text
 
 
 def test_default_paths():
@@ -381,7 +566,7 @@ def test_default_paths():
 
 
 def test_run_with_prep_roles_yaml(tmp_path: Path):
-    """YAML config overrides auto-selection order."""
+    """YAML config drives mock_cycle and later."""
     if not _CONTEXT_MINI.is_file() or not _CLAIMS_MINI.is_file():
         pytest.skip("mini fixtures missing")
     yaml_path = tmp_path / "prep_roles.yaml"
@@ -407,3 +592,33 @@ def test_run_with_prep_roles_yaml(tmp_path: Path):
     text = out.read_text(encoding="utf-8")
     assert "## S2 — Primary" in text
     assert "Later jobs" in text
+
+
+def test_mock_order_follows_yaml_over_auto(tmp_path: Path):
+    """YAML mock_order controls interview order."""
+    if not _CONTEXT_MINI.is_file() or not _CLAIMS_MINI.is_file():
+        pytest.skip("mini fixtures missing")
+    yaml_path = tmp_path / "prep_roles.yaml"
+    yaml_path.write_text(
+        "mock_cycle:\n"
+        "  - id: S1\n    label: Primary\n"
+        "  - id: S2\n    label: Stretch\n"
+        "  - id: S4\n    label: Stretch 2\n"
+        "later: []\n"
+        "mock_order: [S2, S1, S4]\n",
+        encoding="utf-8",
+    )
+    out = tmp_path / "personas.draft.md"
+    run(
+        role_slug="devops",
+        context_path=_CONTEXT_MINI,
+        claims_path=_CLAIMS_MINI,
+        out_path=out,
+        prep_roles_path=yaml_path,
+        force=True,
+        require_reviewed=False,
+    )
+    text = out.read_text(encoding="utf-8")
+    mock_section_start = text.index("## Mock order")
+    mock_block = text[mock_section_start:mock_section_start + 200]
+    assert mock_block.index("S2") < mock_block.index("S1") < mock_block.index("S4")

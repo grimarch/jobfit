@@ -11,6 +11,7 @@ Before first `prep-personas draft`:
 1. `context.md` exported with `--include-company` (for company names in draft)
 2. All starred jobs labeled: `prep_label` ∈ `fit` | `stretch` | `brand-only` | `skip-for-prep`
 3. `claims.md` has **`**Reviewed:**`** header (Phase 0c complete)
+4. `data/user/devops/input/prep_roles.yaml` exists — copy from `prep_roles.yaml.example` and set S* ids
 
 ---
 
@@ -45,13 +46,20 @@ docker compose build app
 ## Verify checklist (~10 min)
 
 - [ ] 3 mock roles (fit + stretch, different archetypes) + 1 Later
-- [ ] **Gaps for this job** match claims.md Gaps table — spot-check AWS/Azure/Jenkins
+- [ ] **Gaps for this job** match claims.md Gaps table — spot-check AWS/Azure/Jenkins (must be verbatim)
 - [ ] No production AWS/Azure claims introduced in Lead from claims
-- [ ] Language matches context: S4 DE primary, S1/S2 EN
-- [ ] Mock order: fit first
+- [ ] Language matches context: S4 DE primary, S1/S2 EN; S4 on-call = historical 2016–2020
+- [ ] Mock order matches `mock_order` list in `prep_roles.yaml`
 - [ ] Anchors table filled (one-liner per role)
 - [ ] Stories to write numbered consistently
-- [ ] Later job has short entry, not a full block
+- [ ] Later job has company + refnr (not just one-liner)
+- [ ] H1 is `# Prep roles (devops)` — not renamed
+- [ ] `**Draft** generated:` carries original ISO timestamp (not replaced with CV metadata)
+- [ ] No `[CANDIDATE_NAME]` / `[EMAIL]` PII in output
+- [ ] Summary table (`| Prep role | Job | Company |`) present
+- [ ] `## Mock order` section present with numbered list
+- [ ] `## Anchors` table present
+- [ ] **JD focus** paraphrases `**JD excerpt:**` only — no invented stack terms
 
 ---
 
@@ -67,9 +75,9 @@ Do not use stories/mock until `personas.md` is **Reviewed**.
 
 ---
 
-## Optional: custom role selection (`prep_roles.yaml`)
+## `prep_roles.yaml` — required before draft
 
-**Default path:** `data/user/devops/input/prep_roles.yaml` (gitignored)
+**Path:** `data/user/devops/input/prep_roles.yaml` (gitignored)
 **Example:** `data/user/devops/input/prep_roles.yaml.example`
 
 ```bash
@@ -78,6 +86,8 @@ cp data/user/devops/input/prep_roles.yaml.example data/user/devops/input/prep_ro
 docker compose exec app jobfit prep-personas draft --role devops --force
 ```
 
+`prep-personas draft` raises `FileNotFoundError` if `prep_roles.yaml` is absent.
+
 **Fields:**
 
 | Field | Required | Description |
@@ -85,12 +95,14 @@ docker compose exec app jobfit prep-personas draft --role devops --force
 | `mock_cycle[].id` | yes | S* id from context.md (e.g. `S1`) |
 | `mock_cycle[].label` | yes | Display label in draft (e.g. `Primary`, `Mittelstand`) |
 | `mock_cycle[].archetype` | no | Short archetype hint for summary table |
+| `mock_cycle[].llm` | no | Per-role hints for `refine` LLM (lead_themes, language, framing, mock_traps_extra) |
 | `later[].id` | yes | S* id for jobs to skip in first mock cycle |
 | `later[].label` | no | Default: `Later` |
 | `later[].reason` | no | One-line note on why deferred |
 | `mock_order` | no | List of S* ids in practice order (default: mock_cycle order) |
+| `refine` | no | Global hints block appended to PREP CONFIG for the refine LLM |
 
-Without YAML: draft auto-selects fit first, then stretch (up to 3); brand-only → Later.
+**LLM hints (`llm:` per role):** passed to `prep-personas refine` as `## PREP CONFIG` in the user prompt. CV and claims.md are authoritative — hints are guidance only and cannot override facts.
 
 ---
 
