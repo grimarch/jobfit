@@ -1,0 +1,89 @@
+# Personal stories_enrichment.yaml — devops prep (gitignored)
+# Regenerate draft after edits: jobfit prep-stories draft --role devops --merge --force
+
+voice: "first person, mid-level DevOps, direct — collaborative, not architect or team lead"
+de_level: "B2 HR (DTB 2024) — short Sag sentences for Adacor-style screen; avoid C1 flourishes"
+
+global_comment: |
+  Lead with problem and business impact before tools.
+  Primary clouds: GCP + DigitalOcean — patterns transfer to AWS/Azure; never claim AWS/Azure production.
+  Semgrep and OWASP ZAP only as part of GitLab CI — not standalone security product expertise.
+  FastAPI / GrimWaves = personal API project — supporting platform work, not backend-lead.
+  On-call: B2B support at WORK_COMP_2 was Jul 2016–Apr 2020 — not current rotation.
+
+employers:
+  WORK_COMP_1:
+    industry: "Personal product software — LMS platform, GrimWaves API, JobFit"
+    company_stage: "Personal projects and side projects (Jan 2023–present)"
+    display_name: "my personal projects"
+    anonymize_level: generic
+    comment: |
+      All WORK_COMP_1 bullets are personal / side projects — not a named employer; speak as "I built…" / "my project…".
+      LMS platform: own GitLab CI/CD (45→10 min), Semgrep/ZAP in pipeline, GCP/DO infra — a live product I operate.
+      GrimWaves API: personal API project; Vault RBAC + AppRole — platform/security angle, not backend-lead.
+      JobFit: separate personal analytics platform (23-feed ETL) — strongest end-to-end ownership story.
+      Keep LMS, GrimWaves, and JobFit as three distinct projects; never merge into one narrative.
+
+  WORK_COMP_2:
+    industry: "B2B managed hosting / infrastructure provider"
+    company_stage: "Mittelstand-style ops; fleet 200+ hosts (Gentoo, Debian, Ubuntu, Docker)"
+    display_name: "my previous employer"
+    anonymize_level: generic
+    comment: |
+      DevOps Engineer May 2020–Aug 2021: fleet compliance, Ansible Molecule, GitLab CI for packages, Grafana/Prometheus, Helm umbrella chart.
+      Unix & Network Support Jul 2016–Apr 2020: B2B SLA triage, tcpdump/Wireshark, Jira — historical, not current on-call.
+      Strong multi-distro ops story for Adacor mock; customer-facing hosting context.
+
+  WORK_COMP_3:
+    industry: "Enterprise IT outsourcing (RHEL VMs)"
+    company_stage: "short stint Jul 2015–Jun 2016"
+    display_name: "an earlier employer"
+    anonymize_level: generic
+    comment: "First-level RHEL monitoring and middleware triage — background only; do not lead interviews with this role"
+
+stories:
+  s1-ci-cd:
+    comment: |
+      S1/WAIYS: personal LMS — live product with real users/releases; manual ~45 min → ~10 min; child pipelines staging→prod.
+      Frame as platform ownership for a product that runs, not "employer AI startup" experience.
+
+  s1-terraform:
+    comment: |
+      29 Terraform resources, two stacks (GCP LMS + DO Vault Raft), GCS remote state.
+      S1: reproducible infra for product team. S4: IaC discipline for customer hosting — willing to learn Azure, no prod claim.
+
+  s1-vault:
+    comment: |
+      GrimWaves API — hardcoded creds removed; RBAC, AppRole, Vault Agent, audit logging, onboarding pattern.
+      S2: app identity / secrets angle — not AWS IAM. Say "least privilege for services", not "IAM specialist".
+
+  s1-jobfit:
+    comment: |
+      Personal platform: 23 feeds ETL, weeks → 30–40 min per analysis run — clearest ownership story among WORK_COMP_1 projects.
+
+  s1-helm-opt:
+    optional: true
+    comment: |
+      WORK_COMP_2 era: umbrella chart replaced fork, PostgreSQL externalized, post-upgrade validation.
+      Chart-level K8s only — not cluster operator. Use if interviewer asks K8s depth; skip in short S1 mock.
+
+  s4-ansible:
+    comment: |
+      S4 primary DE story: 200+ hosts, weekly manual compliance → daily automated; Molecule-tested Ansible role.
+      Multi-distro (Gentoo/Debian/Ubuntu/Docker) — hosting / fleet ops framing for Adacor.
+
+  s4-observability:
+    comment: |
+      Grafana + Prometheus + Graphite, 200+ hosts, faster triage with compliance dashboards.
+      S4 DE: operational visibility for ops team. S2: not OTel/Datadog/SRE architect — metrics foundation only.
+
+  s2-devsecops:
+    comment: |
+      S2/Zalionai: shift-left — same-day automated Semgrep/ZAP reports vs ad-hoc reviews.
+      Security-first DevOps via CI gates; do not claim certification-level tool expertise.
+
+  s4-triage-opt:
+    optional: true
+    comment: |
+      B2B support Jul 2016–Apr 2020 at WORK_COMP_2: SLA, tcpdump/Wireshark/traceroute, Jira, 5–7 h/week saved via scripts.
+      S4 DE HR screen — diagnostics empathy; explicitly not current Bereitschaftsdienst.

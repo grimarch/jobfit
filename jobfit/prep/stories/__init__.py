@@ -1,1 +1,1 @@
-"""Phase 2 STAR story draft/refine — not implemented."""
+"""Phase 2 STAR story draft + refine pipeline."""

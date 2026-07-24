@@ -1,0 +1,58 @@
+# Demo stories_enrichment.yaml — fictional context for Max Mustermann
+# CV: demo/CV_devops.md · prep roles: demo/prep_roles.yaml · gaps: demo/gap_lines.yaml
+# Copy template: ../stories_enrichment.yaml.example
+
+voice: "first person, senior platform/DevOps, direct — technical depth without architect posturing"
+de_level: "C1 — clear German for mittelstand mock; still short Sag sentences on HR screens"
+
+global_comment: |
+  Lead with outcome metrics before tool names.
+  Primary stack: AWS/GCP, EKS/GKE, GitLab CI, ArgoCD GitOps, Terraform/Pulumi, Prometheus/Grafana/OTel.
+  Do not claim Jenkins, Datadog, or AWS CDK production depth — see demo/gap_lines.yaml.
+
+employers:
+  WORK_COMP_1:
+    industry: "B2B SaaS / cloud platform (product company)"
+    company_stage: "scale-up, Berlin; platform team ~12 product teams on shared IDP"
+    display_name: "NimbusCloud GmbH"
+    anonymize_level: named
+    comment: |
+      Senior DevOps since 2021: multi-region EKS/GKE, ArgoCD GitOps, Backstage IDP, FinOps.
+      On-call lead today (24/7 platform) — state dates honestly from CV.
+
+  WORK_COMP_2:
+    industry: "Enterprise software / product delivery"
+    company_stage: "mid-size product org, Hamburg"
+    display_name: "Beispiel AG"
+    anonymize_level: named
+    comment: |
+      DevOps 2018–2021: VM → Kubernetes migration, GitLab CI (Trivy, SonarQube), company-wide Prometheus/Grafana.
+
+  WORK_COMP_3:
+    industry: "IT services / infrastructure"
+    company_stage: "consulting-style ops, Hamburg"
+    display_name: "ExampleTech Solutions"
+    anonymize_level: named
+    comment: "Infrastructure 2016–2018: Terraform/Ansible on AWS, PostgreSQL/Redis — background only"
+
+stories:
+  s1-ci-cd:
+    comment: "GitOps: deploy lead time days → under 30 min (ArgoCD, 40+ microservices); open with release pain"
+  s1-terraform:
+    comment: "Terraform modules + multi-region EKS/GKE — reproducibility and IDP modules, not vanity metrics"
+  s1-vault:
+    comment: "Vault + OPA/Gatekeeper framing — platform secrets and policy, not AWS IAM specialist"
+  s1-jobfit:
+    comment: "Backstage IDP: onboarding 2 weeks → 1 day — platform ownership hook"
+  s1-helm-opt:
+    optional: true
+    comment: "Helm/K8s at Beispiel AG — optional K8s depth only"
+  s4-ansible:
+    comment: "Ansible/Terraform provisioning (ExampleTech) — automation for mittelstand-style mock"
+  s4-observability:
+    comment: "Prometheus/Grafana/OTel company-wide — ops visibility; not Datadog primary"
+  s2-devsecops:
+    comment: "Trivy + SonarQube in GitLab CI — shift-left vs manual security review"
+  s4-triage-opt:
+    optional: true
+    comment: "On-call lead + postmortems/SLO (NimbusCloud) — current rotation; skip in short EN rounds"

@@ -713,6 +713,130 @@ def cmd_prep_personas_refine(
         raise SystemExit(1) from e
 
 
+@cli.group(name="prep-stories")
+def prep_stories_group() -> None:
+    """Generate prep stories (stories.draft.md → stories.llm.md) from context + claims + personas."""
+
+
+@prep_stories_group.command(name="draft")
+@role_option
+@click.option(
+    "--context",
+    "context_path",
+    default=None,
+    metavar="PATH",
+    help="Prep context export (default: prompts/prep/{role}/context.md).",
+)
+@click.option(
+    "--claims",
+    "claims_path",
+    default=None,
+    metavar="PATH",
+    help="Reviewed claims.md (default: prompts/prep/{role}/claims.md).",
+)
+@click.option(
+    "--personas",
+    "personas_path",
+    default=None,
+    metavar="PATH",
+    help="Reviewed personas.md (default: prompts/prep/{role}/personas.md).",
+)
+@click.option(
+    "--out",
+    "out_path",
+    default=None,
+    metavar="PATH",
+    help="Output draft path (default: prompts/prep/{role}/stories.draft.md).",
+)
+@click.option(
+    "--prep-roles",
+    "prep_roles_path",
+    default=None,
+    metavar="PATH",
+    help="prep_roles.yaml (default: data/user/{role}/input/prep_roles.yaml).",
+)
+@click.option(
+    "--enrichment",
+    "enrichment_path",
+    default=None,
+    metavar="PATH",
+    help="stories_enrichment.yaml (default: data/user/{role}/input/stories_enrichment.yaml).",
+)
+@click.option(
+    "--no-require-reviewed",
+    "no_require_reviewed",
+    is_flag=True,
+    help="Skip the **Reviewed:** guard on claims.md.",
+)
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Overwrite --out if it already exists.",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Print slot counts and paths; write nothing.",
+)
+def cmd_prep_stories_draft(
+    role: str,
+    context_path: str | None,
+    claims_path: str | None,
+    personas_path: str | None,
+    out_path: str | None,
+    prep_roles_path: str | None,
+    enrichment_path: str | None,
+    no_require_reviewed: bool,
+    force: bool,
+    dry_run: bool,
+) -> None:
+    """Draft STAR story Input blocks from context + claims + personas — no LLM.
+
+    Reads story catalog (slots.py), maps claims evidence per story, extracts locked metrics.
+    Writes stories.draft.md with <!-- jobfit:prep-stories:llm-input --> markers.
+
+    Requires claims.md to have **Reviewed:** header (skip with --no-require-reviewed).
+    Human gate: verify stories.draft.md Input blocks before running prep-stories refine.
+    """
+    from pathlib import Path
+    from loguru import logger
+    from jobfit.prep.stories import draft as stories_draft
+
+    ctx = Path(context_path) if context_path else stories_draft.default_context_path(role)
+    clm = Path(claims_path) if claims_path else stories_draft.default_claims_path(role)
+    pers = Path(personas_path) if personas_path else stories_draft.default_personas_path(role)
+    out = Path(out_path) if out_path else stories_draft.default_draft_path(role)
+    proles = Path(prep_roles_path) if prep_roles_path else None
+    enrich = Path(enrichment_path) if enrichment_path else None
+
+    try:
+        summary = stories_draft.run(
+            role_slug=role,
+            context_path=ctx,
+            claims_path=clm,
+            personas_path=pers,
+            out_path=out,
+            prep_roles_path=proles,
+            enrichment_path=enrich,
+            require_reviewed=not no_require_reviewed,
+            dry_run=dry_run,
+            force=force,
+        )
+    except (FileExistsError, FileNotFoundError, ValueError) as e:
+        logger.error(str(e))
+        raise SystemExit(1) from e
+
+    if dry_run:
+        logger.info(
+            "dry-run: mocks={} stories={} evidence_rows={}",
+            summary.get("mock_ids"),
+            summary.get("story_count"),
+            summary.get("evidence_claim_count"),
+        )
+    else:
+        logger.info("Written: {}", summary.get("out"))
+
+
 @cli.group(name="llm")
 def llm_group() -> None:
     """LLM provider utilities."""

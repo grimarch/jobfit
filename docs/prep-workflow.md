@@ -122,7 +122,16 @@ Run when starting a new search wave or switching role focus.
     # see docs/prep-personas-review.md
     ```
 
-11. `stories.md` — 8–10 stories from claims (DE for HR, EN for tech)
+11. `stories.draft.md` + `stories.llm.md` → `stories.md` — STAR story pipeline:
+
+    ```bash
+    jobfit prep-stories draft --role ROLE --force
+    # verify stories.draft.md Input blocks (evidence, metrics, traps)
+    # → reply «draft ок» to unblock refine (Phase 2)
+    jobfit prep-stories refine --role ROLE --mock all --force   # Phase 2
+    # verify → cp stories.llm.md stories.md + Reviewed header
+    # see docs/prep-stories-review.md (Phase 2)
+    ```
 12. `notes.md` — must-defend topics + recurring starred gaps + 2-min pitch
 13. `drills.md` — 2 design + 2 debug written answers for primary prep role (S1)
 

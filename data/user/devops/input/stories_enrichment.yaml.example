@@ -1,0 +1,82 @@
+# stories_enrichment.yaml — optional human context for prep-stories draft + refine
+#
+# Copy to:  data/user/devops/input/stories_enrichment.yaml  (gitignored — your real file)
+# Demo fill: data/user/devops/input/demo/stories_enrichment.yaml
+#            (Max Mustermann — see demo/CV_devops.md, demo/prep_roles.yaml)
+#
+# WORK_COMP_N tags match anonymized employer placeholders in prompts/CV.md Evidence cells.
+# Values below are FICTIONAL (demo CV). Replace with your employers when copying.
+#
+# All fields optional — draft runs without this file.
+
+voice: "first person, senior platform/DevOps, direct — technical depth without architect posturing"
+de_level: "C1 — clear German for mittelstand mock; still short Sag sentences on HR screens"
+
+global_comment: |
+  Fictional demo (Max Mustermann): lead with outcome metrics before tool names.
+  Primary stack: AWS/GCP, EKS/GKE, GitLab CI, ArgoCD GitOps, Terraform/Pulumi, Prometheus/Grafana/OTel.
+  Do not claim Jenkins, Datadog, or AWS CDK production depth — see demo/gap_lines.yaml.
+
+employers:
+  WORK_COMP_1:
+    industry: "B2B SaaS / cloud platform (product company)"
+    company_stage: "scale-up, Berlin; platform team ~12 product teams on shared IDP"
+    display_name: "NimbusCloud GmbH"
+    anonymize_level: named
+    comment: |
+      Senior DevOps since 2021: multi-region EKS/GKE, ArgoCD GitOps, Backstage IDP, FinOps.
+      On-call lead today (24/7 platform) — state dates honestly; not the same as historical support-only roles.
+
+  WORK_COMP_2:
+    industry: "Enterprise software / product delivery"
+    company_stage: "mid-size product org, Hamburg"
+    display_name: "Beispiel AG"
+    anonymize_level: named
+    comment: |
+      DevOps 2018–2021: VM → Kubernetes migration, GitLab CI (Trivy, SonarQube), company-wide Prometheus/Grafana.
+
+  WORK_COMP_3:
+    industry: "IT services / infrastructure"
+    company_stage: "consulting-style ops, Hamburg"
+    display_name: "ExampleTech Solutions"
+    anonymize_level: named
+    comment: "Infrastructure 2016–2018: Terraform/Ansible on AWS, PostgreSQL/Redis — background only"
+
+stories:
+  s1-ci-cd:
+    comment: |
+      Demo map: GitOps rollout — deploy lead time days → under 30 minutes (ArgoCD, 40+ microservices).
+      Open with release pain, not tool list. S1 mock = startup platform / EN.
+
+  s1-terraform:
+    comment: |
+      Demo map: Terraform modules on IDP; multi-region EKS/GKE — reproducibility and module reuse, not raw resource count.
+
+  s1-vault:
+    comment: |
+      Demo map: platform secrets + policy (Vault, OPA/Gatekeeper in CV skills) — service identity, not AWS IAM depth.
+
+  s1-jobfit:
+    comment: |
+      Demo map: Backstage internal developer platform — new service onboarding 2 weeks → 1 day.
+      Ownership / platform-product angle; not a side-project name in spoken story unless you keep it.
+
+  s1-helm-opt:
+    optional: true
+    comment: "Demo map: Helm/K8s migration at Beispiel AG — optional unless interviewer pushes K8s depth"
+
+  s4-ansible:
+    comment: "Demo map: Ansible provisioning era (ExampleTech) — fleet/automation framing for mittelstand mock"
+
+  s4-observability:
+    comment: |
+      Demo map: Prometheus/Grafana (and OTel in CV) rolled out company-wide — ops visibility, not Datadog/SRE architect.
+
+  s2-devsecops:
+    comment: "Demo map: Trivy + SonarQube gates in GitLab CI — shift-left, same-day feedback vs manual review"
+
+  s4-triage-opt:
+    optional: true
+    comment: |
+      Demo map: incident postmortems + SLO work as on-call lead (NimbusCloud) — current rotation, not 2016 support era.
+      Use only if mock asks operational resilience; skip for short technical rounds.
